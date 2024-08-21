@@ -1,16 +1,8 @@
-import React, { useState } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { chartData, orders, ordersOverview } from "./data";
+import React from "react";
+import CustomerDemographics from "./CustomerDemographics";
+import { chartData, orders, ordersOverview } from "../Admin/data";
 
-const Admin = () => {
+const AdminArtisan = () => {
   // Sample data for the chart
   const chartData = [
     { name: "Jan", pts: 1 },
@@ -20,52 +12,12 @@ const Admin = () => {
     { name: "May", pts: 4 },
     { name: "Jun", pts: 5 },
   ];
-
-  // Sample data for the orders list
-
   return (
     <div className="flex w-full">
       {/* Main Content */}
-      <div className="absolute pl-[18rem] pt-1.5 text-2xl font-semibold">
-        <p>Overview</p>
-      </div>
 
       <div className="flex-1 p-10 grid grid-cols-2 gap-6">
-        {/* Breakdown Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Breakdown</h2>
-            <select className="border border-gray-300 p-2 rounded-lg">
-              <option>Jan - Present</option>
-            </select>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex space-x-4 mb-6">
-            <button className="text-black font-semibold border-b-2 border-black">
-              Review Levels
-            </button>
-            <button className="text-gray-500">Completed Jobs</button>
-            <button className="text-gray-500">Cashflow</button>
-          </div>
-
-          {/* Line Chart */}
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="pts"
-                stroke="#8884d8"
-                fill="#8884d8"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <CustomerDemographics />
 
         {/* Ongoing Orders */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -132,4 +84,4 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default AdminArtisan;
