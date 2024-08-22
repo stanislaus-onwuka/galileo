@@ -1,7 +1,28 @@
-Flask==2.1.2
-Flask-PyMongo==2.3.0
-Flask-Cors==3.0.10
 python-dotenv==0.20.0
 pandas==1.4.2
 scikit-learn==1.0.2
 geopy==2.2.0
+fastapi==0.103.1
+uvicorn[standard]==0.23.2
+
+# MongoDB driver
+motor==3.1.1
+
+# JWT token handling
+python-jose==3.3.0
+
+# Password hashing
+passlib[bcrypt]==1.7.4
+
+# Pydantic (for data validation and settings management)
+pydantic==2.4.2
+
+# CORS (Cross-Origin Resource Sharing) support (optional, if needed for frontend)
+fastapi[all]==0.103.1
+
+# For environment variable management (optional)
+python-dotenv==1.0.0
+
+# To manage enums more easily (optional)
+enum34==1.1.10
+
