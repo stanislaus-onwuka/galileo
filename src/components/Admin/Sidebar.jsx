@@ -58,7 +58,7 @@ const Sidebar = () => {
             </li>
             <li>
               <NavLink
-                to="/artisan"
+                to="artisan"
                 className="flex items-center space-x-4 p-2 rounded hover:bg-gray-700"
               >
                 <FaUsersCog size={24} />
@@ -67,7 +67,7 @@ const Sidebar = () => {
             </li>
             <li>
               <NavLink
-                to="/client"
+                to="client"
                 className="flex items-center space-x-4 p-2 rounded hover:bg-gray-700"
               >
                 <BsTruck size={24} />
