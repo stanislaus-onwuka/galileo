@@ -1,43 +1,30 @@
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from models import User, UserInDB, UserResponse
-from utils import verify_password, get_password_hash, create_access_token
-from database import users_collection
-from bson import ObjectId
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from routers import auth, customers, artisans, admins, suppliers
 
 app = FastAPI()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins, or specify a list of allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, etc.), or specify a list of allowed methods
+    allow_headers=["*"],  # Allow all headers, or specify a list of allowed headers
+)
 
-async def get_user(username: str):
-    user = await users_collection.find_one({"username": username})
-    if user:
-        return UserInDB(**user)
 
-async def authenticate_user(username: str, password: str):
-    user = await get_user(username)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
+# Routes
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(customers.router, prefix="/customers", tags=["customers"])
+app.include_router(artisans.router, prefix="/artisans", tags=["artisans"])
+app.include_router(admins.router, prefix="/admins", tags=["admins"])
+app.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
 
-@app.post("/signup", response_model=UserResponse)
-async def signup(user: User):
-    user_exists = await users_collection.find_one({"email": user.email})
-    if user_exists:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    
-    user.password = get_password_hash(user.password)
-    user = await users_collection.insert_one(user.dict())
-    created_user = await users_collection.find_one({"_id": user.inserted_id})
-    return UserResponse(username=created_user["username"], email=created_user["email"])
 
-@app.post("/login", response_model=UserResponse)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
-    
-    access_token = create_access_token(data={"sub": user.username})
-    return UserResponse(username=user.username, email=user.email, token=access_token)
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Galileo API"}
+

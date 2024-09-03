@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   IoHomeOutline,
   IoSettingsOutline,
@@ -6,9 +6,9 @@ import {
   IoChevronForwardOutline,
 } from "react-icons/io5";
 import { FaUsersCog } from "react-icons/fa";
-import { BsBoxSeam, BsPeople, BsTruck } from "react-icons/bs";
+import {  BsPeople, BsTruck } from "react-icons/bs";
 import { FiLogOut } from "react-icons/fi";
-import { Outlet, Link, NavLink } from "react-router-dom";
+import { Outlet, NavLink } from "react-router-dom";
 
 const Sidebar = () => {
   const [isMinimized, setIsMinimized] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
 import {
   LineChart,
   Line,
@@ -8,8 +8,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { chartData, orders, ordersOverview } from "./data";
-import Sidebar from "./Sidebar";
+import { orders, ordersOverview } from "./data";
+// import Sidebar from "./Sidebar";
 
 const Admin = () => {
   // Sample data for the chart
@@ -119,8 +119,8 @@ const Admin = () => {
               </thead>
               <tbody>
                 {/* Sample rows */}
-                {ordersOverview.map((item) => (
-                  <tr>
+                {ordersOverview.map((item, idx) => (
+                  <tr key={idx}>
                     <td className="border px-4 py-2">{item.id}</td>
                     <td className="border px-4 py-2">{item.clientName}</td>
                     <td className="border px-4 py-2">{item.businessName}</td>
