@@ -1,12 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
-# from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 
-from models import User, UserInDB, LoginForm, RoleEnum
 from schemas import UserResponse
-from utils import verify_password, get_password_hash, create_access_token, get_collection_by_role
+from models import User, UserInDB, LoginForm
 from database import customers_collection, artisans_collection, suppliers_collection
+from utils import verify_password, get_password_hash, create_access_token, get_collection_by_role
 
 
 router = APIRouter()
@@ -45,14 +43,14 @@ async def signup(user: User):
 
     user = await collection.insert_one(user.model_dump())
     created_user = await collection.find_one({"_id": user.inserted_id})
+    access_token = create_access_token(data={"sub": created_user["username"]})
 
     return UserResponse(
         username=created_user["username"],
         email=created_user["email"],
-        role=created_user["role"]
+        role=created_user["role"],
+        token=access_token
     )
-
-
 
 
 @router.post("/login", response_model=UserResponse)
