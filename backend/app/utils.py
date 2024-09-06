@@ -138,5 +138,5 @@ async def update_user_password(email: str, hashed_password: str):
 # ============================
 # Email Handling
 # ============================
-def send_email(email, subject, content):
-    ...
+def send_email(recipient_email, subject, content):
+    print(content)

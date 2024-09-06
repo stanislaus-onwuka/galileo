@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException, status
+import random
+from datetime import datetime, timedelta, timezone
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import EmailStr
 
-from schemas import UserResponse, UserSignupInput
-from models import Guarantor, User, LoginForm
 from database import guarantors_collection
-from utils import get_user, verify_password, get_password_hash, create_access_token, get_collection_by_role, send_email, update_user_password
+from models import Guarantor, LoginForm
+from schemas import UserResponse, UserSignupInput
+from utils import (create_access_token, get_collection_by_role, get_password_hash, get_user, send_email,
+                   update_user_password, verify_password)
 
 router = APIRouter()
 
@@ -65,3 +70,66 @@ async def login(form_data: LoginForm):
 
     access_token = create_access_token(data={"sub": user.username})
     return UserResponse(username=user.username, email=user.email, role=user.role, token=access_token)
+
+
+@router.post("/forgot-password")
+async def request_otp(email: EmailStr, background_tasks: BackgroundTasks):
+    user = await get_user(email, by_email=True)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    otp = random.randint(100000, 999999)
+    hashed_otp = get_password_hash(str(otp))
+    expiration_time = datetime.now(timezone.utc) + timedelta(minutes=15)
+
+    # Update user with hashed OTP and expiration time
+    collection = get_collection_by_role(user.role)
+    await collection.update_one(
+        {"email": email},
+        {"$set": {"otp": hashed_otp, "otp_expiration": expiration_time}}
+    )
+
+    background_tasks.add_task(
+        send_email,
+        subject="Password Reset OTP",
+        recipient_email=user.email,
+        content=f"Your OTP is: {otp}"
+    )
+
+    return JSONResponse(content={"message": "OTP sent to email."})
+
+
+@router.post("/verify-otp")
+async def verify_otp(email: EmailStr, otp: int, new_password: str):
+    user = await get_user(email, by_email=True)
+    user_collection = get_collection_by_role(user.role)
+
+    user_data = await user_collection.find_one({"email": user.email})
+    stored_otp = user_data.get("otp")
+    otp_expiration = user_data.get("otp_expiration")
+
+    if not user or not stored_otp or not otp_expiration:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No OTP request found")
+
+    # Convert otp_expiration to UTC timezone
+    otp_expiration = otp_expiration.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > otp_expiration:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="OTP has expired")
+
+    if not verify_password(str(otp), stored_otp):  # Verify the hashed OTP
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP")
+
+    # OTP is valid, update the password
+    hashed_password = get_password_hash(new_password)
+    await update_user_password(email, hashed_password)
+
+    # Clear the OTP fields
+    await user_collection.update_one(
+        {"email": email},
+        {"$set": {"otp": None, "otp_expiration": None}}
+    )
+
+    return JSONResponse(content={"message": "Password updated successfully"})
