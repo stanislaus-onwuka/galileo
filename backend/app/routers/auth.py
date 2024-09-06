@@ -1,25 +1,15 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from pydantic import EmailStr
 
-from schemas import UserResponse
-from models import User, UserInDB, LoginForm
-from database import customers_collection, artisans_collection, suppliers_collection
-from utils import verify_password, get_password_hash, create_access_token, get_collection_by_role
-
+from schemas import UserResponse, UserSignupInput
+from models import Guarantor, User, LoginForm
+from database import guarantors_collection
+from utils import get_user, verify_password, get_password_hash, create_access_token, get_collection_by_role, send_email, update_user_password
 
 router = APIRouter()
 
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-async def get_user(identifier: str, by_email: bool = False) -> UserInDB:
-    collections = [customers_collection, artisans_collection, suppliers_collection]
-    query_field = "email" if by_email else "username"
-
-    for collection in collections:
-        user = await collection.find_one({query_field: identifier})
-        if user:
-            return UserInDB(**user)
 
 
 async def authenticate_user(username: str, password: str) -> bool:
@@ -29,7 +19,7 @@ async def authenticate_user(username: str, password: str) -> bool:
 
 # Routes
 @router.post("/signup", response_model=UserResponse)
-async def signup(user: User):
+async def signup(user: UserSignupInput):
     # Check if the email is already registered in any collection
     if await get_user(user.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
@@ -37,13 +27,26 @@ async def signup(user: User):
     if await get_user(user.email, by_email=True):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
-    user.password = get_password_hash(user.password)
+    # Insert user
+    user_collection = get_collection_by_role(user.role)
+    user_result = await user_collection.insert_one(
+        {**user.model_dump(exclude={"password"}), 
+        "password": get_password_hash(user.password)}
+    )
+    user_id = str(user_result.inserted_id)
 
-    collection = get_collection_by_role(user.role)
+    # Create and insert Guarantor
+    guarantor = Guarantor(
+        first_name=user.guarantor_firstName,
+        last_name=user.guarantor_lastName,
+        phone_number=user.guarantor_phoneNumber,
+        user_id=user_id
+    )
+    await guarantors_collection.insert_one(guarantor.model_dump())
 
-    user = await collection.insert_one(user.model_dump())
-    created_user = await collection.find_one({"_id": user.inserted_id})
-    access_token = create_access_token(data={"sub": created_user["username"]})
+    # Generate auth access token and return response
+    created_user = await user_collection.find_one({"_id": user_result.inserted_id})
+    access_token = create_access_token(data={"sub": created_user["email"], "role": created_user["role"]})
 
     return UserResponse(
         username=created_user["username"],

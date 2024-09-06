@@ -7,11 +7,13 @@ class LoginForm(BaseModel):
     username: str
     password: str
 
+
 class RoleEnum(str, Enum):
     admin = "admin"
     artisan = "artisan"
     customer = "customer"
     supplier = "supplier"
+
 
 class Coordinates(BaseModel):
     type: str = Field("Point")
@@ -23,9 +25,15 @@ class User(BaseModel):
     firstName: str = Field(..., min_length=3, max_length=50)
     lastName: str = Field(..., min_length=3, max_length=50)
     username: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr = Field(..., unique=True)
+    email: EmailStr
     password: str = Field(..., min_length=6)
     role: RoleEnum
+
+class Guarantor(BaseModel):
+    first_name: str = Field(..., min_length=3, max_length=50)
+    last_name: str = Field(..., min_length=3, max_length=50)
+    phone_number: str = Field(..., min_length=10, max_length=15)
+    user_id: str = Field(...)
 
 
 class UserInDB(User):
@@ -41,5 +49,3 @@ class CustomerUpdate(BaseModel):
     phone_number: Optional[str] = Field(None, description="User's phone number")
     address: Optional[str] = Field(None, description="User's address")
     location: Optional[Coordinates]
-
-
