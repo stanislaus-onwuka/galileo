@@ -14,41 +14,31 @@ router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-async def get_user(username: str):
-    collection = get_collection_by_role(user.role)
+async def get_user(identifier: str, by_email: bool = False) -> UserInDB:
+    collections = [customers_collection, artisans_collection, suppliers_collection]
+    query_field = "email" if by_email else "username"
 
-    user = await collection.find_one({"username": username})
-    if user:
-        return UserInDB(**user)
+    for collection in collections:
+        user = await collection.find_one({query_field: identifier})
+        if user:
+            return UserInDB(**user)
 
-async def authenticate_user(username: str, password: str):
+
+async def authenticate_user(username: str, password: str) -> bool:
     user = await get_user(username)
-
-    if not user:
-        return False
-    if not verify_password(password, user.password):
-        return False
-    return user
-
+    return user if user and verify_password(password, user.password) else False
 
 
 # Routes
 @router.post("/signup", response_model=UserResponse)
 async def signup(user: User):
-
     # Check if the email is already registered in any collection
-    collections = [customers_collection, artisans_collection, suppliers_collection]
-    
-    for collection in collections:
-        username_exists = await collection.find_one({"username": user.username})
-        email_exists = await collection.find_one({"email": user.email})
+    if await get_user(user.username):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
 
-        if username_exists:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
-        
-        if email_exists:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    
+    if await get_user(user.email, by_email=True):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
     user.password = get_password_hash(user.password)
 
     collection = get_collection_by_role(user.role)
@@ -67,24 +57,10 @@ async def signup(user: User):
 
 @router.post("/login", response_model=UserResponse)
 async def login(form_data: LoginForm):
-
     user = await authenticate_user(form_data.username, form_data.password)
 
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
-    
+
     access_token = create_access_token(data={"sub": user.username})
-
-    # if user.role == RoleEnum.customer:
-    #     return RedirectResponse(url="/customers/dashboard", headers={"Authorization": f"Bearer {access_token}"})
-    
-    # elif user.role == RoleEnum.artisan:
-    #     return RedirectResponse(url="/artisans/dashboard", headers={"Authorization": f"Bearer {access_token}"})
-    
-    # elif user.role == RoleEnum.supplier:
-    #     return RedirectResponse(url="/suppliers/dashboard", headers={"Authorization": f"Bearer {access_token}"})
-    
-    # else:
-    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Role not recognized")
-
     return UserResponse(username=user.username, email=user.email, role=user.role, token=access_token)
