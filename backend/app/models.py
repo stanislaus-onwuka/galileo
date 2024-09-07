@@ -48,8 +48,8 @@ class CustomerUpdate(BaseModel):
 
 
 class ProfileUpdateBase(BaseModel):
-    firstName: str = Field(..., min_length=3, max_length=50)
-    lastName: str = Field(..., min_length=3, max_length=50)
+    firstName: str = Field(None, min_length=3, max_length=50)
+    lastName: str = Field(None, min_length=3, max_length=50)
     phone_number: Optional[str] = None
     address: Optional[str] = None
 
@@ -61,7 +61,7 @@ class CustomerProfileUpdate(ProfileUpdateBase):
 class ArtisanProfileUpdate(ProfileUpdateBase):
     min_rate: Optional[int] = None
     max_rate: Optional[int] = None
-    services: Optional[list]
+    services: Optional[list] = None
     business_name: Optional[str] = Field(..., min_length=3, max_length=100)
 
 
