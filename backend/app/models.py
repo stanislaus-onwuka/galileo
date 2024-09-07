@@ -1,8 +1,9 @@
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
 from bson import ObjectId
 from pydantic import BaseModel, EmailStr, Field, validator
-
-from typing import List, Optional
-from enum import Enum
 
 
 class RoleEnum(str, Enum):
@@ -30,6 +31,10 @@ class User(BaseModel):
     class Config:
         allow_population_by_field_name = True
         json_encoders = {ObjectId: str}
+
+    @validator('id', pre=True)
+    def objectid_to_str(cls, id):
+        return str(id) if isinstance(id, ObjectId) else id
 
 
 class Guarantor(BaseModel):
@@ -66,8 +71,8 @@ class ProfileUpdateBase(BaseModel):
         json_encoders = {ObjectId: str}
 
     @validator('id', pre=True)
-    def objectid_to_str(cls, v):
-        return str(v) if isinstance(v, ObjectId) else v
+    def objectid_to_str(cls, id):
+        return str(id) if isinstance(id, ObjectId) else id
 
 
 class CustomerProfileUpdate(ProfileUpdateBase):
@@ -78,9 +83,67 @@ class ArtisanProfileUpdate(ProfileUpdateBase):
     min_rate: Optional[int] = None
     max_rate: Optional[int] = None
     services: Optional[list] = None
-    business_name: Optional[str] = Field(..., min_length=3, max_length=100)
+    business_name: Optional[str] = Field(None, min_length=3, max_length=100)
 
 
 class SupplierProfileUpdate(ProfileUpdateBase):
     company_name: Optional[str] = None
     products: Optional[List[str]] = None
+
+
+class ServiceRequest(BaseModel):
+    service_type: str
+    price_offer: float
+    description: Optional[str] = None
+    client_id: str
+    artisan_id: Optional[str] = None
+    status: str = "pending"
+    date_time: datetime = Field(default_factory=datetime.utcnow)
+
+
+class JobStatus(str, Enum):
+    pending = "pending"
+    successful = "successful"
+    in_progress = "in-progress"
+    cancelled = "cancelled"
+
+
+class ServiceRequest(BaseModel):
+    id: str = Field(None, alias="_id")
+    client_id: str = None
+    artisan_id: str = None
+    service_type: str
+    price_offer: float
+    description: Optional[str] = None
+    status: JobStatus = JobStatus.pending
+    date_time: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
+    @validator('id', pre=True)
+    def objectid_to_str(cls, id):
+        return str(id) if isinstance(id, ObjectId) else id
+
+
+class Job(BaseModel):
+    id: str = Field(None, alias="_id")
+    client_id: str
+    artisan_id: str
+    client_name: str
+    service_type: str
+    price_offer: float
+    description: Optional[str] = None
+    status: JobStatus = JobStatus.pending
+    date_time: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
+    @validator('id', pre=True)
+    def objectid_to_str(cls, id):
+        return str(id) if isinstance(id, ObjectId) else id

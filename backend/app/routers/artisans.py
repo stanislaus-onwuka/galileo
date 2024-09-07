@@ -2,8 +2,9 @@ from bson import ObjectId
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 
-from database import artisans_collection
-from models import ArtisanProfileUpdate
+from database import artisans_collection, jobs_collection, service_requests_collection
+from models import ArtisanProfileUpdate, Job, RoleEnum, ServiceRequest, UserInDB
+from utils import get_current_active_user, require_roles
 
 router = APIRouter()
 
@@ -21,11 +22,10 @@ async def artisan_dashboard():
 async def get_all_artisans(
     collection=Depends(get_artisans_collection)
 ):
-    artisans = await collection.find().to_list(length=None)
-    return [ArtisanProfileUpdate(**artisan) for artisan in artisans]
+    return await collection.find().to_list(length=None)
 
 
-@router.get("/{artisan_id}", response_model=ArtisanProfileUpdate)
+@router.get("/profile/{artisan_id}", response_model=ArtisanProfileUpdate)
 async def artisan_profile(
     artisan_id: str = Path(..., description="The ID of the artisan to update"),
     collection=Depends(get_artisans_collection)
@@ -37,8 +37,35 @@ async def artisan_profile(
     if not artisan:
         raise HTTPException(status_code=404, detail="Artisan not found")
 
-    return ArtisanProfileUpdate(**artisan)
+    return artisan
 
+
+@router.post("/request-service/{artisan_id}", response_model=ServiceRequest)
+async def request_service(
+    artisan_id: str,
+    request: ServiceRequest,
+    user: UserInDB = Depends(get_current_active_user),
+):
+    # Create service request
+    request.client_id = user.id
+    request.artisan_id = artisan_id
+    req_data = request.model_dump(exclude_unset=True)
+    new_req = await service_requests_collection.insert_one(req_data)
+
+    # Create Job
+    job_data = {
+        **request.model_dump(exclude={"_id", "id"}),
+        "client_name": f"{user.firstName} {user.lastName}"
+    }
+    await jobs_collection.insert_one(job_data)
+
+    return await service_requests_collection.find_one({"_id": new_req.inserted_id})
+
+@router.get("/jobs", response_model=list[Job])
+async def get_artisan_jobs(
+    current_user: UserInDB = Depends(require_roles([RoleEnum.artisan, RoleEnum.admin])),
+):
+    return await jobs_collection.find({"artisan_id": current_user.id}).to_list(None)
 
 # /recommend
 # /recommend - artisans
