@@ -4,7 +4,7 @@ from fastapi import HTTPException, Path
 from fastapi import APIRouter, Depends
 
 from database import artisans_collection
-from models import ArtisanProfileUpdate, RoleEnum, UserInDB
+from models import ArtisanProfile, RoleEnum, UserInDB
 from utils import require_roles
 
 
@@ -20,9 +20,9 @@ async def admin_dashboard():
     return {"message": "Welcome to the admin dashboard"}
 
 
-@router.patch("/artisan/{artisan_id}", response_model=ArtisanProfileUpdate)
+@router.patch("/artisan/{artisan_id}", response_model=ArtisanProfile)
 async def update_artisan_profile(
-    profile_data: ArtisanProfileUpdate,
+    profile_data: ArtisanProfile,
     artisan_id: str = Path(..., description="The ID of the artisan to update"),
     _: UserInDB = Depends(require_roles([RoleEnum.admin])),
 ):
@@ -37,6 +37,4 @@ async def update_artisan_profile(
     updated_data = profile_data.model_dump(exclude_unset=True)
     await artisans_collection.update_one({"_id": artisan_id}, {"$set": updated_data})
 
-    # Fetch the updated profile
-    updated_artisan = await artisans_collection.find_one({"_id": artisan_id})
-    return ArtisanProfileUpdate(**updated_artisan)
+    return await artisans_collection.find_one({"_id": artisan_id})

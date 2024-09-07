@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from models import (ArtisanProfileUpdate, CustomerProfileUpdate, ProfileUpdateBase, RoleEnum, SupplierProfileUpdate,
-                    UserInDB)
+from models import ArtisanProfile, BaseProfile, CustomerProfile, RoleEnum, SupplierProfile, UserInDB
 from utils import get_collection_by_role, get_current_active_user
 
 router = APIRouter()
@@ -9,18 +8,18 @@ router = APIRouter()
 
 @router.patch("/profile/update")
 async def update_profile(
-    profile_update: ProfileUpdateBase,
+    profile_update: BaseProfile,
     current_user: UserInDB = Depends(get_current_active_user),
 ):
     if current_user.role == RoleEnum.customer:
-        profile_class = CustomerProfileUpdate
+        profile_class = CustomerProfile
     elif current_user.role == RoleEnum.supplier:
-        profile_class = SupplierProfileUpdate
+        profile_class = SupplierProfile
     elif current_user.role == RoleEnum.artisan:
-        profile_class = ArtisanProfileUpdate
+        profile_class = ArtisanProfile
 
     # Validate the profile data
-    validated_profile = profile_class(**profile_update.model_dump())
+    validated_profile = profile_class(**profile_update.model_dump(exclude_unset=True))
 
     # # If the user is an artisan and qualifications are provided, handle the file upload
     # if current_user.role == RoleEnum.artisan and qualifications:
@@ -33,7 +32,7 @@ async def update_profile(
     collection = get_collection_by_role(current_user.role)
     await collection.update_one(
         {"email": current_user.email},
-        {"$set": validated_profile.model_dump()}
+        {"$set": validated_profile.model_dump(exclude_unset=True)}
     )
 
     updated_user = await collection.find_one({"email": current_user.email})
