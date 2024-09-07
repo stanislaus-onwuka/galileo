@@ -1,4 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field
+from bson import ObjectId
+from pydantic import BaseModel, EmailStr, Field, validator
+
 from typing import List, Optional
 from enum import Enum
 
@@ -17,12 +19,17 @@ class Coordinates(BaseModel):
 
 # Base user
 class User(BaseModel):
+    id: str = Field(alias="_id")
     firstName: str = Field(..., min_length=3, max_length=50)
     lastName: str = Field(..., min_length=3, max_length=50)
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
     password: str = Field(..., min_length=6)
     role: RoleEnum
+
+    class Config:
+        allow_population_by_field_name = True
+        json_encoders = {ObjectId: str}
 
 
 class Guarantor(BaseModel):
@@ -48,10 +55,19 @@ class CustomerUpdate(BaseModel):
 
 
 class ProfileUpdateBase(BaseModel):
+    id: str = Field(alias="_id")
     firstName: str = Field(None, min_length=3, max_length=50)
     lastName: str = Field(None, min_length=3, max_length=50)
     phone_number: Optional[str] = None
     address: Optional[str] = None
+
+    class Config:
+        allow_population_by_field_name = True
+        json_encoders = {ObjectId: str}
+
+    @validator('id', pre=True)
+    def objectid_to_str(cls, v):
+        return str(v) if isinstance(v, ObjectId) else v
 
 
 class CustomerProfileUpdate(ProfileUpdateBase):
