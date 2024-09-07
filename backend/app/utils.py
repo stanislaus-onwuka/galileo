@@ -1,17 +1,20 @@
-from jose import JWTError, jwt
-from datetime import datetime, timedelta, timezone
 import bcrypt
-from models import UserInDB, RoleEnum
-from database import customers_collection, artisans_collection, suppliers_collection
-from pymongo.collection import Collection
+from datetime import datetime, timedelta, timezone
+from jose import JWTError, jwt
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+
+from pymongo.collection import Collection
+
+from models import UserInDB, RoleEnum
+from database import customers_collection, artisans_collection, suppliers_collection
 
 
 # ============================
 # Constants and OAuth2 setup
 # ============================
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -37,6 +40,32 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
     to_encode["exp"] = expire
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+# ============================
+# Authentication and Authorization
+# ============================
+async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
+    """Get the current active user based on token and required roles"""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = decode_token(token)
+        username: str = payload.get("sub")
+        role: str = payload.get("role")
+        token_data = {"username": username, "role": role}
+    except JWTError as e:
+        raise credentials_exception from e
+
+    user = await get_user_from_collection(username=token_data["username"], role=RoleEnum(token_data["role"]))
+    if user is None:
+        raise credentials_exception
+
+    return user
 
 
 # ============================
@@ -73,42 +102,19 @@ def get_collection_by_role(role: RoleEnum) -> Collection:
         )
 
 
-async def get_user_from_collection(email: str, role: RoleEnum):
+async def get_user_from_collection(username: str, role: RoleEnum):
     """Fetch user data from the appropriate collection by role"""
     collection = get_collection_by_role(role)
-    user = await collection.find_one({"email": email})
+    user = await collection.find_one({"username": username})
     return UserInDB(**user) if user else None
 
 
-# ============================
-# Authentication and Authorization
-# ============================
-async def get_current_active_user(token: str = Depends(oauth2_scheme), required_roles: list[RoleEnum] = []):
-    """Get the current active user based on token and required roles"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = decode_token(token)
-        email: str = payload.get("sub")
-        role: str = payload.get("role")
-        if email is None or role is None:
-            raise credentials_exception
-        token_data = {"email": email, "role": role}
-    except JWTError as e:
-        raise credentials_exception from e
-
-    user = await get_user_from_collection(email=token_data["email"], role=RoleEnum(token_data["role"]))
-    if user is None:
-        raise credentials_exception
-
-    if required_roles and RoleEnum(user.role) not in required_roles:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
-
-    return user
+def require_roles(required_roles: list[RoleEnum]):
+    async def role_checker(user: dict = Depends(get_current_active_user)):
+        if RoleEnum(user.role) not in required_roles:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+        return user
+    return role_checker
 
 
 # ============================

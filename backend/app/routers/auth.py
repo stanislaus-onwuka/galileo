@@ -1,20 +1,20 @@
 import random
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import EmailStr
 
 from database import guarantors_collection
-from models import Guarantor, LoginForm
+from models import Guarantor
 from schemas import UserResponse, UserSignupInput
 from utils import (create_access_token, get_collection_by_role, get_password_hash, get_user, send_email,
                    update_user_password, verify_password)
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 async def authenticate_user(username: str, password: str) -> bool:
@@ -35,7 +35,7 @@ async def signup(user: UserSignupInput):
     # Insert user
     user_collection = get_collection_by_role(user.role)
     user_result = await user_collection.insert_one(
-        {**user.model_dump(exclude={"password"}), 
+        {**user.model_dump(exclude={"password", "guarantor_firstName", "guarantor_lastName", "guarantor_phoneNumber"}), 
         "password": get_password_hash(user.password)}
     )
     user_id = str(user_result.inserted_id)
@@ -57,19 +57,23 @@ async def signup(user: UserSignupInput):
         username=created_user["username"],
         email=created_user["email"],
         role=created_user["role"],
-        token=access_token
+        access_token=access_token
     )
 
 
 @router.post("/login", response_model=UserResponse)
-async def login(form_data: LoginForm):
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = await authenticate_user(form_data.username, form_data.password)
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    access_token = create_access_token(data={"sub": user.username})
-    return UserResponse(username=user.username, email=user.email, role=user.role, token=access_token)
+    access_token = create_access_token(data={"sub": user.username, "role": user.role})
+    return UserResponse(username=user.username, email=user.email, role=user.role, access_token=access_token)
 
 
 @router.post("/forgot-password")
