@@ -7,7 +7,7 @@ class UserResponse(BaseModel):
     username: str
     email: EmailStr
     role: RoleEnum
-    token: Optional[str] = None
+    access_token: Optional[str] = None
 
 
 class UserSignupInput(BaseModel):

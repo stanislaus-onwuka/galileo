@@ -3,11 +3,6 @@ from typing import List, Optional
 from enum import Enum
 
 
-class LoginForm(BaseModel):
-    username: str
-    password: str
-
-
 class RoleEnum(str, Enum):
     admin = "admin"
     artisan = "artisan"
@@ -29,6 +24,7 @@ class User(BaseModel):
     password: str = Field(..., min_length=6)
     role: RoleEnum
 
+
 class Guarantor(BaseModel):
     first_name: str = Field(..., min_length=3, max_length=50)
     last_name: str = Field(..., min_length=3, max_length=50)
@@ -49,3 +45,26 @@ class CustomerUpdate(BaseModel):
     phone_number: Optional[str] = Field(None, description="User's phone number")
     address: Optional[str] = Field(None, description="User's address")
     location: Optional[Coordinates]
+
+
+class ProfileUpdateBase(BaseModel):
+    firstName: str = Field(..., min_length=3, max_length=50)
+    lastName: str = Field(..., min_length=3, max_length=50)
+    phone_number: Optional[str] = None
+    address: Optional[str] = None
+
+
+class CustomerProfileUpdate(ProfileUpdateBase):
+    preferences: Optional[List[str]] = None
+
+
+class ArtisanProfileUpdate(ProfileUpdateBase):
+    min_rate: Optional[int] = None
+    max_rate: Optional[int] = None
+    services: Optional[list]
+    business_name: Optional[str] = Field(..., min_length=3, max_length=100)
+
+
+class SupplierProfileUpdate(ProfileUpdateBase):
+    company_name: Optional[str] = None
+    products: Optional[List[str]] = None
