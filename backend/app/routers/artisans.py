@@ -1,11 +1,11 @@
 from typing import List
 from bson import ObjectId
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from database import artisans_collection, jobs_collection, service_requests_collection
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
-from utils import calculate_distance, get_current_active_user, require_roles
+from utils import calculate_distance, get_current_active_user, require_roles, sort_artisans_key
 from schemas import ArtisanProfileResponse, ArtisanRating
 
 router = APIRouter()
@@ -146,3 +146,49 @@ async def rate_artisan(
     )
 
     return {"message": "Artisan rated successfully"}
+
+
+@router.get("/filter", response_model=List[ArtisanProfileResponse])
+async def filter_artisans(
+    user: UserInDB = Depends(get_current_active_user),
+    address: str = Query(None, description="Address to search"),
+    km: float = Query(float('inf'), description="Proximity in kilometers"),
+    price_from: int = Query(None, description="Minimum service rate"),
+    price_to: int = Query(None, description="Maaximum service rate"),
+    avg_rating: float = Query(None, ge=0, le=5, description="Artisan rating"),
+    limit: int = Query(20, description="Maximum number of results to return")
+):
+    query = {"location": {"$exists": True}}
+
+    if avg_rating is not None:
+        query["avg_rating"] = {"$gte": avg_rating}
+
+    if address:
+        query["address"] = {"$regex": address, "$options": "i"}
+
+    if price_from is not None:
+        query["min_service_rate"] = {"$lte": float(price_to)}
+
+    if price_to is not None:
+        query["max_service_rate"] = {"$gte": float(price_from)}
+
+    artisans_cursor = artisans_collection.find(query)
+
+    filtered_artisans = []
+    async for artisan in artisans_cursor:
+        artisan_location = Coordinates(**artisan["location"])
+        if user.location:
+            distance = calculate_distance(user.location, artisan_location)
+            if distance <= km:
+                artisan["distance"] = distance
+                filtered_artisans.append(artisan)
+        else:
+            artisan["distance"] = None
+            filtered_artisans.append(artisan)
+
+    sorted_artisans = sorted(
+        filtered_artisans,
+        key=lambda x: sort_artisans_key(x, avg_rating)
+    )
+
+    return sorted_artisans[:limit]
