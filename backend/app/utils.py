@@ -167,15 +167,3 @@ def calculate_distance(coord1: Coordinates, coord2: Coordinates) -> float:
         math.cos(lat2) * math.sin(dlon/2)**2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     return R * c
-
-
-def sort_artisans_key(artisan: dict, avg_rating: float) -> tuple:
-    """
-    Returns a sorting key for an artisan based on distance and rating difference from the average rating.
-    Distance is favored over rating.
-    """
-    distance = artisan.get("distance") or float('inf')
-    rating = artisan.get("avg_rating") or 0
-    rating_diff = abs(rating - avg_rating) if avg_rating else -rating
-
-    return (distance, rating_diff)
