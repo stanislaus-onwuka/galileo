@@ -39,8 +39,14 @@ class BaseProfileResponse(BaseModel):
 
 
 class ArtisanProfileResponse(BaseProfileResponse):
-    rating_score: float = 0
+    rating_count: float = 0
+    avg_rating: float = 0
     services: Optional[list] = []
     min_service_rate: Optional[int] = 0
     max_service_rate: Optional[int] = 0
     business_name: Optional[str] = None
+
+
+class ArtisanRating(BaseModel):
+    rating: float = Field(..., ge=0, le=5)
+    comment: Optional[str] = None

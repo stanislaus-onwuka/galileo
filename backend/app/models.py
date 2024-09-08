@@ -89,7 +89,9 @@ class CustomerProfile(BaseProfile):
 
 
 class ArtisanProfile(BaseProfile):
-    rating_score: float = 0
+    avg_rating: float = 0
+    rating_count: float = 0
+    total_ratings: float = 0
     min_service_rate: Optional[int] = 0
     max_service_rate: Optional[int] = 0
     services: Optional[list] = []

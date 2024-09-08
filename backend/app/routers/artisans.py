@@ -4,9 +4,9 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Path
 
 from database import artisans_collection, jobs_collection, service_requests_collection
-from models import Coordinates, Job, RoleEnum, ServiceRequest, UserInDB
+from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
 from utils import calculate_distance, get_current_active_user, require_roles
-from schemas import ArtisanProfileResponse
+from schemas import ArtisanProfileResponse, ArtisanRating
 
 router = APIRouter()
 
@@ -104,3 +104,45 @@ async def recommend_artisans(
     # Sort artists by closest distance and apply limit
     sorted_artisans = sorted(artisans_with_distance, key=lambda x: x["distance"])
     return sorted_artisans[:limit]
+
+
+@router.post("/review/{artisan_id}")
+async def rate_artisan(
+    artisan_id: str,
+    rating: ArtisanRating,
+    user: UserInDB = Depends(get_current_active_user)
+):
+    # Verify job exists, belongs to user, and is completed
+    job = await jobs_collection.find_one({
+        "artisan_id": artisan_id,
+        "client_id": user.id,
+        "status": JobStatus.successful
+    })
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="You can't rate this artisan as they haven't completed a job for you."
+        )
+
+    # Update artisan's rating
+    updated_artisan = await artisans_collection.find_one_and_update(
+        {"_id": ObjectId(artisan_id)},
+        {
+            "$inc": {
+                "total_ratings": rating.rating,
+                "rating_count": 1
+            }
+        },
+        return_document=True
+    )
+    if not updated_artisan:
+        raise HTTPException(status_code=404, detail="Artisan not found")
+
+    # Calculate and update new rating score
+    new_score = round(updated_artisan["total_ratings"] / updated_artisan["rating_count"], 1)
+    await artisans_collection.update_one(
+        {"_id": ObjectId(artisan_id)},
+        {"$set": {"avg_rating": new_score}}
+    )
+
+    return {"message": "Artisan rated successfully"}
