@@ -29,8 +29,9 @@ class JobStatus(str, Enum):
 # ============================
 
 class Coordinates(BaseModel):
-    latitude: Optional[float]
-    longitude: Optional[float]
+    # defaults to UNILAG coordinates
+    latitude: Optional[float] = 6.5158
+    longitude: Optional[float] = 3.3898
 
 
 # Base user
@@ -42,7 +43,11 @@ class User(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6)
     role: RoleEnum
-    location: Optional[Coordinates] = [0, 0]
+
+    address: Optional[str] = None
+    location: Optional[Coordinates] = Coordinates(latitude=6.5158, longitude=3.3898)
+    distance: Optional[float] = None
+    phone_number: Optional[str] = None
 
     class Config:
         allow_population_by_field_name = True
@@ -69,12 +74,14 @@ class Guarantor(BaseModel):
 
 
 class BaseProfile(BaseModel):
-    firstName: str = Field(None, min_length=3, max_length=50)
-    lastName: str = Field(None, min_length=3, max_length=50)
-    phone_number: Optional[str] = Field(None, description="User's phone number")
-    address: Optional[str] = Field(None, description="User's address")
-    location: Optional[Coordinates]
-    distance: float = None
+    firstName: Optional[str] = Field(None, min_length=3, max_length=50)
+    lastName: Optional[str] = Field(None, min_length=3, max_length=50)
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    email: Optional[EmailStr] = None
+    address: Optional[str] = None
+    location: Optional[Coordinates] = Coordinates(latitude=6.5158, longitude=3.3898)
+    distance: Optional[float] = None
+    phone_number: Optional[str] = None
 
 
 class CustomerProfile(BaseProfile):
@@ -82,14 +89,14 @@ class CustomerProfile(BaseProfile):
 
 
 class ArtisanProfile(BaseProfile):
-    min_rate: Optional[int] = None
-    max_rate: Optional[int] = None
-    rating: float = 0
-    services: Optional[list] = None
+    rating_score: float = 0
+    min_service_rate: Optional[int] = 0
+    max_service_rate: Optional[int] = 0
+    services: Optional[list] = []
     business_name: Optional[str] = Field(None, min_length=3, max_length=100)
 
 
-class SupplierProfile(ArtisanProfile):
+class SupplierProfile(BaseProfile):
     ...
 
 

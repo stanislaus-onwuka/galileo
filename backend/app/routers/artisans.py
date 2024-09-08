@@ -1,12 +1,12 @@
-import math
 from typing import List
 from bson import ObjectId
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 
 from database import artisans_collection, jobs_collection, service_requests_collection
-from models import ArtisanProfile, Coordinates, Job, RoleEnum, ServiceRequest, UserInDB
-from utils import get_current_active_user, require_roles
+from models import Coordinates, Job, RoleEnum, ServiceRequest, UserInDB
+from utils import calculate_distance, get_current_active_user, require_roles
+from schemas import ArtisanProfileResponse
 
 router = APIRouter()
 
@@ -20,14 +20,14 @@ async def artisan_dashboard():
     return {"message": "Welcome to the artisan dashboard"}
 
 
-@router.get("/all", response_model=list[ArtisanProfile])
+@router.get("/all", response_model=list[ArtisanProfileResponse])
 async def get_all_artisans(
     collection=Depends(get_artisans_collection)
 ):
     return await collection.find().to_list(length=None)
 
 
-@router.get("/profile/{artisan_id}", response_model=ArtisanProfile)
+@router.get("/profile/{artisan_id}", response_model=ArtisanProfileResponse)
 async def artisan_profile(
     artisan_id: str = Path(..., description="The ID of the artisan to update"),
     collection=Depends(get_artisans_collection)
@@ -73,42 +73,34 @@ async def get_artisan_jobs(
     return await jobs_collection.find({"artisan_id": current_user.id}).to_list(None)
 
 
-def calculate_distance(coord1: Coordinates, coord2: Coordinates) -> float:
-    R = 6371  # Earth's radius in kilometers
-    lat1, lon1 = math.radians(coord1.latitude), math.radians(coord1.longitude)
-    lat2, lon2 = math.radians(coord2.latitude), math.radians(coord2.longitude)
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = math.sin(dlat/2)**2 + math.cos(lat1) * \
-        math.cos(lat2) * math.sin(dlon/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    return R * c
-
-
-@router.get("/recommend-artisans", response_model=List[ArtisanProfile])
-async def recommend_artisans(current_user: UserInDB = Depends(get_current_active_user), max_distance: float = 50, limit: int = 10):
-    if not current_user.location:
+@router.get("/recommend", response_model=List[ArtisanProfileResponse])
+async def recommend_artisans(
+    user: UserInDB = Depends(get_current_active_user),
+    max_distance: float = 50,
+    limit: int = 20
+):
+    if not user.location:
         raise HTTPException(status_code=400, detail="User location not set")
 
-    artisans = list(artisans_collection.find({"role": "artisan"}))
+    # Query artisans without using geospatial features
+    artisans_cursor = artisans_collection.find({
+        "location": {"$exists": True},
+    })
 
     # Calculate distances and filter artisans
     artisans_with_distance = []
-    for artisan in artisans:
-        if "location" in artisan and artisan["location"]:
-            distance = calculate_distance(
-                current_user.location, Coordinates(**artisan["location"]))
-            if distance <= max_distance:
-                artisans_with_distance.append(
-                    {**artisan, "distance": distance})
+    async for artisan in artisans_cursor:
+        artisan_location = Coordinates(**artisan["location"])
+        distance = calculate_distance(user.location, artisan_location)
+        # If artist is within the specified max_distance, add to list
+        if distance <= max_distance:
+            artisan_data = {
+                **artisan,
+                "id": str(artisan["_id"]),
+                "distance": distance
+            }
+            artisans_with_distance.append(artisan_data)
 
-    # Sort artisans by rating (descending) and distance (ascending)
-    sorted_artisans = sorted(
-        artisans_with_distance,
-        key=lambda x: (-x.get("rating", 0), x["distance"])
-    )
-
-    # Limit the number of results
-    recommended_artisans = sorted_artisans[:limit]
-
-    return [ArtisanProfile(**artisan) for artisan in recommended_artisans]
+    # Sort artists by closest distance and apply limit
+    sorted_artisans = sorted(artisans_with_distance, key=lambda x: x["distance"])
+    return sorted_artisans[:limit]

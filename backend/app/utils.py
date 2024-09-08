@@ -1,4 +1,5 @@
 import bcrypt
+import math
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 
@@ -7,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from pymongo.collection import Collection
 
-from models import UserInDB, RoleEnum
+from models import Coordinates, UserInDB, RoleEnum
 from database import customers_collection, artisans_collection, suppliers_collection
 
 
@@ -146,3 +147,23 @@ async def update_user_password(email: str, hashed_password: str):
 # ============================
 def send_email(recipient_email, subject, content):
     print(content)
+
+
+# ============================
+# Others
+# ============================
+
+def calculate_distance(coord1: Coordinates, coord2: Coordinates) -> float:
+    """
+    Calculate the great-circle distance between two points on Earth.
+    Uses the Haversine formula for spherical geometry.
+    """
+    R = 6371  # Earth's radius in kilometers
+    lat1, lon1 = math.radians(coord1.latitude), math.radians(coord1.longitude)
+    lat2, lon2 = math.radians(coord2.latitude), math.radians(coord2.longitude)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * \
+        math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c

@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field
+from bson import ObjectId
+from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional
-from models import RoleEnum
+from models import Coordinates, RoleEnum
 
 
 class UserResponse(BaseModel):
@@ -20,3 +21,26 @@ class UserSignupInput(BaseModel):
     guarantor_firstName: str = Field(..., min_length=3, max_length=50)
     guarantor_lastName: str = Field(..., min_length=3, max_length=50)
     guarantor_phoneNumber: str = Field(..., min_length=10, max_length=15)
+
+
+class BaseProfileResponse(BaseModel):
+    id: str  = Field(alias="_id")
+    username: str
+    firstName: str
+    lastName: str
+    role: RoleEnum
+    address: Optional[str] = None
+    location: Coordinates = Coordinates(latitude=6.5158, longitude=3.3898)
+    phone_number: Optional[str] = None
+
+    @validator('id', pre=True)
+    def objectid_to_str(cls, id):
+        return str(id) if isinstance(id, ObjectId) else id
+
+
+class ArtisanProfileResponse(BaseProfileResponse):
+    rating_score: float = 0
+    services: Optional[list] = []
+    min_service_rate: Optional[int] = 0
+    max_service_rate: Optional[int] = 0
+    business_name: Optional[str] = None
