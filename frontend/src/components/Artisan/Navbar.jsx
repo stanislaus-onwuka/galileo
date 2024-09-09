@@ -10,10 +10,13 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gray-900 text-white p-4">
+    <nav className="text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo Section */}
         <div className={`${isOpen ? "hidden" : "flex items-center space-x-4"}`}>
+          <div>
+            <img src="/assets/svgs/customer/company-logo.svg"/>
+          </div>
           <h2 className="text-2xl font-bold">Galileo</h2>
         </div>
 

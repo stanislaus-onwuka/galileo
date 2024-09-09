@@ -1,0 +1,1 @@
+export const multipleClasses = (...classNames) => classNames.join(' ');
