@@ -1,11 +1,12 @@
 from bson import ObjectId
 
-from fastapi import HTTPException, Path
+from fastapi import BackgroundTasks, HTTPException, Path
 from fastapi import APIRouter, Depends
 
-from database import artisans_collection
-from models import ArtisanProfile, RoleEnum, UserInDB
-from utils import require_roles
+from database import artisans_collection, jobs_collection, service_requests_collection
+from models import ArtisanProfile, Job, RoleEnum, UserInDB
+from schemas import AdminResponse, ServiceRequestResponse
+from utils import get_user, require_roles, send_email
 
 
 router = APIRouter()
@@ -38,3 +39,13 @@ async def update_artisan_profile(
     await artisans_collection.update_one({"_id": artisan_id}, {"$set": updated_data})
 
     return await artisans_collection.find_one({"_id": artisan_id})
+
+
+@router.get("/requests/pending", response_model=list[ServiceRequestResponse])
+async def list_pending_service_requests(
+    _: UserInDB = Depends(require_roles([RoleEnum.admin]))
+):
+    return await service_requests_collection.find(
+        {"status": {"$ne": "accepted"}},
+    ).to_list(length=None)
+
