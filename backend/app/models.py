@@ -107,29 +107,15 @@ class SupplierProfile(BaseProfile):
 # ============================
 
 class ServiceRequest(BaseModel):
-    id: str = Field(None, alias="_id")
-    client_id: str = None
-    artisan_id: str = None
     service_type: str
     price_offer: float
     description: Optional[str] = None
-    status: JobStatus = JobStatus.pending
-    date_time: datetime = Field(default_factory=datetime.utcnow)
-
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-
-    @validator('id', pre=True)
-    def objectid_to_str(cls, id):
-        return str(id) if isinstance(id, ObjectId) else id
 
 
 class Job(BaseModel):
-    id: str = Field(None, alias="_id")
     client_id: str
     artisan_id: str
+    request_id: str
     client_name: str
     service_type: str
     price_offer: float
@@ -137,11 +123,3 @@ class Job(BaseModel):
     status: JobStatus = JobStatus.pending
     date_time: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-
-    @validator('id', pre=True)
-    def objectid_to_str(cls, id):
-        return str(id) if isinstance(id, ObjectId) else id

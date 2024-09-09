@@ -1,7 +1,9 @@
-from bson import ObjectId
-from pydantic import BaseModel, EmailStr, Field, validator
+from datetime import datetime
 from typing import Optional
-from models import Coordinates, RoleEnum
+
+from bson import ObjectId
+from models import Coordinates, RoleEnum, ServiceRequest
+from pydantic import BaseModel, EmailStr, Field, validator
 
 
 class UserResponse(BaseModel):
@@ -50,3 +52,19 @@ class ArtisanProfileResponse(BaseProfileResponse):
 class ArtisanRating(BaseModel):
     rating: float = Field(..., ge=0, le=5)
     comment: Optional[str] = None
+
+
+class ServiceRequestResponse(ServiceRequest):
+    id: str  = Field(alias="_id")
+    client_id: str
+    artisan_id: str
+    date_time: datetime
+
+    @validator('id', pre=True)
+    def objectid_to_str(cls, id):
+        return str(id) if isinstance(id, ObjectId) else id
+
+
+class AdminResponse(BaseModel):
+    action: str
+    reason: Optional[str] = None

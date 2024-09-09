@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from models import User, UserInDB, CustomerUpdate
+from models import User, UserInDB, BaseProfile
 from utils import get_password_hash
 from database import customers_collection
 from utils import get_current_active_user
@@ -13,7 +13,7 @@ async def customer_dashboard():
 
 @router.put("/update-customer-profile")
 async def update_customer_details(
-    user_update: CustomerUpdate,
+    user_update: BaseProfile,
     current_user: UserInDB = Depends(get_current_active_user)
 ):
     update_data = user_update.dict(exclude_unset=True)

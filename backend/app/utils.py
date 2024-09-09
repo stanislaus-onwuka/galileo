@@ -1,25 +1,34 @@
-import bcrypt
 import math
+import os
 from datetime import datetime, timedelta, timezone
+
+import bcrypt
+from bson import ObjectId
+from dotenv import load_dotenv
 from jose import JWTError, jwt
+from mailjet_rest import Client
+from pymongo.collection import Collection
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from pymongo.collection import Collection
+from database import artisans_collection, customers_collection, suppliers_collection
+from models import Coordinates, RoleEnum, UserInDB
 
-from models import Coordinates, UserInDB, RoleEnum
-from database import customers_collection, artisans_collection, suppliers_collection
-
+load_dotenv()  # load environment variables
 
 # ============================
 # Constants and OAuth2 setup
 # ============================
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = os.getenv("SECRET_KEY")
 
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
+EMAIL_API_SECRET = os.getenv("EMAIL_API_SECRET")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 # ============================
 # JWT Handling
@@ -121,13 +130,16 @@ def require_roles(required_roles: list[RoleEnum]):
 # ============================
 # User Management
 # ============================
-async def get_user(identifier: str, by_email: bool = False) -> UserInDB:
-    """Retrieve a user from any collection based on the identifier (email or username)"""
+async def get_user(identifier: str, by_email: bool = False, by_id: bool = False) -> UserInDB:
+    """Retrieve a user from any collection based on the identifier (email, username, or id)"""
     collections = [customers_collection, artisans_collection, suppliers_collection]
-    query_field = "email" if by_email else "username"
+    query_field = "email" if by_email else "_id" if by_id else "username"
 
     for collection in collections:
-        user = await collection.find_one({query_field: identifier})
+        if by_id:
+            user = await collection.find_one({"_id": ObjectId(identifier)})
+        else:
+            user = await collection.find_one({query_field: identifier})
         if user:
             return UserInDB(**user)
 
@@ -145,8 +157,31 @@ async def update_user_password(email: str, hashed_password: str):
 # ============================
 # Email Handling
 # ============================
-def send_email(recipient_email, subject, content):
-    print(content)
+async def send_email(recipient_email, subject, content):
+    api_key = EMAIL_API_KEY
+    api_secret = EMAIL_API_SECRET
+    mailjet = Client(auth=(api_key, api_secret), version='v3.1')
+    data = {
+        'Messages': [
+            {
+                "From": {
+                    "Email": ADMIN_EMAIL,
+                    "Name": "Galileo"
+                },
+                "To": [
+                    {
+                        "Email": f"{recipient_email}",
+                        "Name": " "
+                    }
+                ],
+                "Subject": f"{subject}",
+                "TextPart": f"{content}",
+            }
+        ]
+    }
+    result = mailjet.send.create(data=data)
+    print(result.status_code)
+    print(result.json())
 
 
 # ============================
