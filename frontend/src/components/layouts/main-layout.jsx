@@ -1,6 +1,10 @@
 /* eslint-disable react/prop-types */
 
+import { Link } from "react-router-dom";
+
 function MainLayout({ children }) {
+    const isLoggedIn = true
+
     return (
         <div>
             <nav className="flex justify-between items-center py-[22px] px-4">
@@ -11,7 +15,14 @@ function MainLayout({ children }) {
                     {/* <button className="border rounded-full border-neutral-40 p-1">
                         <img src="/assets/menu.svg" alt="Mobile menu button" className="w-7" />
                     </button> */}
-                    <button className="rounded-full border-neutral-40 p-1 underline">Login/signup</button>
+                    {
+                        !isLoggedIn ? (
+                            <button className="rounded-full border-neutral-40 p-1 underline">Login/signup</button>
+                        ): (
+                            <Link to="/customer/profile" className="rounded-full border-neutral-40 p-1">Profile</Link>
+                        )
+                    }
+                
                 </div>
             </nav>
             {children}

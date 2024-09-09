@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
 import AuthLayout from "../components/layouts/auth-layout";
 
 const Signup = () => {
@@ -29,14 +29,16 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const response = await axios.post("http://localhost:8000/auth/signup", formData);
-            console.log(response.data);
+        // try {
+        //     const response = await axios.post("http://localhost:8000/auth/signup", formData);
+        //     console.log(response.data);
 
-            navigate("/login");
-        } catch (error) {
-            console.error("There was an error during signup", error);
-        }
+        //     navigate("/login");
+        // } catch (error) {
+        //     console.error("There was an error during signup", error);
+        // }
+
+        navigate("/login");
     };
 
     return (

@@ -3,7 +3,7 @@ import React from 'react';
 const steps = [
   { label: 'Artisan Found', completed: true },
   { label: 'Contacted', completed: true },
-  { label: 'Work in Progress', completed: true },
+  { label: 'Work in Progress', completed: false },
   { label: 'Completed', completed: false },
   { label: 'Review', completed: false }
 ];

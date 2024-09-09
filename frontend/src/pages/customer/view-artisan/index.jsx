@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import GoogleMapReact from "google-map-react";
 import MainLayout from "../../../components/layouts/main-layout";
 import ProgressTracker from "../../../components/customer/progress-tracker";
@@ -8,11 +8,11 @@ import ArtisanFeedback from "../../../components/customer/artisan-feedback";
 
 function ViewArtisan() {
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [serviceInProgress, setServiceInProgress] = useState(false)
 
     const { artisanId } = useParams();
     console.log(artisanId);
 
-    const serviceInProgress = true;
 
     const defaultProps = {
         center: {
@@ -46,9 +46,9 @@ function ViewArtisan() {
                 <aside className="max-w-[400px] rounded-xl shadow-level-3 mx-4 relative z-[1] bg-white">
                     <div className="bg-artisan-sidebar h-[168px] rounded-t-xl px-[15px] py-[25px]">
                         <div className="flex justify-between items-center">
-                            <button>
+                            <Link to="/customer">
                                 <img src="/assets/svgs/customer/back-btn.svg" alt="Back Button" />
-                            </button>
+                            </Link>
                             <div className="flex gap-[6px]">
                                 <button>
                                     <img src="/assets/svgs/customer/contact.svg" alt="Contact button" />
@@ -73,7 +73,7 @@ function ViewArtisan() {
                             </div>
                             <div className="flex gap-[6px] items-center">
                                 <img src="/assets/svgs/customer/location-outline.svg" alt="Location" />
-                                <h3>282, Murtala muhammed, Alagomeji</h3>
+                                <h3>***, Alagomeji</h3>
                             </div>
                             <div className="flex gap-[6px] items-center">
                                 <img src="/assets/svgs/customer/contact-outline.svg" alt="Phone number" />
@@ -97,7 +97,7 @@ function ViewArtisan() {
                             </div>
                         ) : (
                             <div className="flex gap-3 w-full mt-6">
-                                <button className="bg-default flex gap-[11px] items-center rounded-full py-[10px] px-5">
+                                <button onClick={()=>setServiceInProgress(true)} className="bg-default flex gap-[11px] items-center rounded-full py-[10px] px-5">
                                     <span>
                                         <img src="/assets/svgs/customer/message-outline.svg" alt="Request Icon" />
                                     </span>

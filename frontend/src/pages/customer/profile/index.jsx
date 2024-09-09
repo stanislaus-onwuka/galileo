@@ -6,7 +6,7 @@ function CustomerProfile() {
         <MainLayout>
             <main className="w-[60%] mx-auto">
                 <div className="flex justify-between items-center mb-8">
-                    <button>{"<"} Back to homepage</button>
+                    <Link to="/customer">{"<"} Back to homepage</Link>
                     <div className="flex gap-9">
                         <Link to="/customer/profile">Profile</Link>
                         <Link to="/customer/wallet">Wallet</Link>
@@ -25,7 +25,7 @@ function CustomerProfile() {
                                     <input
                                         name="firstName"
                                         type="text"
-                                        value="Femi"
+                                        value="Stanley"
                                         className="py-[14.5px] px-4 rounded-lg border border-[#EAECF0]"
                                     />
                                 </div>
@@ -36,7 +36,7 @@ function CustomerProfile() {
                                     <input
                                         name="lastName"
                                         type="text"
-                                        value="Johnsn"
+                                        value="Onwuka"
                                         className="py-[14.5px] px-4 rounded-lg border border-[#EAECF0]"
                                     />
                                 </div>
@@ -60,7 +60,7 @@ function CustomerProfile() {
                                     <input
                                         name="email"
                                         type="email"
-                                        value="femijohnsn@gmail.com"
+                                        value="kachi2505@yahoo.com"
                                         className="py-[14.5px] px-4 rounded-lg border border-[#EAECF0]"
                                     />
                                 </div>

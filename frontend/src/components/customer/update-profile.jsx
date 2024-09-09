@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 function UpdateProfile() {
-    const [showModal, setShowModal] = useState(true)
+    const [showModal, setShowModal] = useState(false)
 
     return (
         <div className={ showModal ? "fixed top-0 left-0 flex" : "fixed top-0 left-0 hidden"}>

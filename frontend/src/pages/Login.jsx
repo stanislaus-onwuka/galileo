@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
 import AuthLayout from "../components/layouts/auth-layout";
 
 const Login = () => {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
-        username: "",
+        email: "",
         password: "",
     });
 
@@ -24,15 +24,17 @@ const Login = () => {
         //   form_data.append('username', formData.username)
         //   form_data.append('password', formData.password)
 
-        try {
-            const response = await axios.post("http://localhost:8000/auth/login", formData);
-            console.log(response.data);
+        // try {
+        //     const response = await axios.post("http://localhost:8000/auth/login", formData);
+        //     console.log(response.data);
 
-            return navigate("/admin");
-            // Handle successful signup (e.g., redirect to login)
-        } catch (error) {
-            console.error("There was an error during login", error);
-        }
+        //     return navigate("/admin");
+        //     // Handle successful signup (e.g., redirect to login)
+        // } catch (error) {
+        //     console.error("There was an error during login", error);
+        // }
+
+        navigate("/customer");
     };
 
     return (
@@ -47,11 +49,11 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-[354px]">
                     <input
-                        type="text"
-                        name="username"
+                        type="email"
+                        name="email"
                         value={formData.username}
                         onChange={handleChange}
-                        placeholder="Username"
+                        placeholder="Email"
                         required
                         className="px-4 py-[15.5px] rounded-lg border border-[#EAECF0]"
                     />
