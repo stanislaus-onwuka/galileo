@@ -14,4 +14,9 @@ suppliers_collection = database.get_collection("suppliers")
 
 admins_collection = database.get_collection("admins")
 
+guarantors_collection = database.get_collection("guarantors")
+
+service_requests_collection = database.get_collection("service_requests")
+
+jobs_collection = database.get_collection("jobs")
 
