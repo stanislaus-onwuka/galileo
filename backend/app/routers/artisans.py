@@ -1,12 +1,13 @@
+from datetime import datetime, timezone
 from typing import List
 from bson import ObjectId
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks
 
 from database import artisans_collection, jobs_collection, service_requests_collection
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
-from utils import calculate_distance, get_current_active_user, require_roles
-from schemas import ArtisanProfileResponse, ArtisanRating
+from utils import calculate_distance, get_current_active_user, require_roles, send_email
+from schemas import ArtisanProfileResponse, ArtisanRating, ServiceRequestResponse
 
 router = APIRouter()
 
@@ -42,25 +43,45 @@ async def artisan_profile(
     return artisan
 
 
-@router.post("/request-service/{artisan_id}", response_model=ServiceRequest)
+@router.post("/request-service/{artisan_id}", response_model=ServiceRequestResponse)
 async def request_service(
     artisan_id: str,
     request: ServiceRequest,
+    background_tasks: BackgroundTasks,
     user: UserInDB = Depends(get_current_active_user),
 ):
-    # Create service request
-    request.client_id = user.id
-    request.artisan_id = artisan_id
-    req_data = request.model_dump(exclude_unset=True)
+    # Validate artisan exists
+    artisan = await artisans_collection.find_one({"_id": ObjectId(artisan_id)})
+    if not artisan:
+        raise HTTPException(status_code=404, detail="Artisan not found")
+
+    req_data = {
+        **request.model_dump(exclude_unset=True),
+        "client_id": user.id,
+        "artisan_id": artisan_id,
+        "date_time": datetime.now(timezone.utc)
+    }
     new_req = await service_requests_collection.insert_one(req_data)
 
-    # Create Job
-    job_data = {
-        **request.model_dump(exclude={"_id", "id"}),
-        "client_name": f"{user.firstName} {user.lastName}"
-    }
-    await jobs_collection.insert_one(job_data)
+    admin_email = "toluisjoel@gmail.com"
+    subject = "New Service Request"
+    request_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
+    content = f"""
+    A new service request has been created:
+    
+    Time: {request_time}
+    Client: {user.firstName} {user.lastName}
+    Artisan: {artisan['firstName']} {artisan['lastName']}
+    Artisan Email: {artisan.get("email", "N/A")}
+    Artisan Phone: {artisan.get("phoneNumber", "N/A")}
+    Service Type: {request.service_type}
+    Price Offer: ₦{request.price_offer}
+    Description: {request.description or "N/A"}
+    """
+
+    # Send email notification to admin
+    background_tasks.add_task(send_email, admin_email, subject, content)
     return await service_requests_collection.find_one({"_id": new_req.inserted_id})
 
 
