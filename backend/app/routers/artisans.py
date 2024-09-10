@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks
 
 from database import artisans_collection, jobs_collection, service_requests_collection
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
-from utils import calculate_distance, get_current_active_user, require_roles, send_email
+from utils import calculate_distance, get_current_user, require_roles, send_email
 from schemas import ArtisanProfileResponse, ArtisanRating, ServiceRequestResponse
 
 load_dotenv()  # load environment variables
@@ -54,7 +54,7 @@ async def request_service(
     artisan_id: str,
     request: ServiceRequest,
     background_tasks: BackgroundTasks,
-    user: UserInDB = Depends(get_current_active_user),
+    user: UserInDB = Depends(get_current_user),
 ):
     # Validate artisan exists
     artisan = await artisans_collection.find_one({"_id": ObjectId(artisan_id)})
@@ -104,7 +104,7 @@ async def get_artisan_jobs(
 
 @router.get("/recommend", response_model=List[ArtisanProfileResponse])
 async def recommend_artisans(
-    user: UserInDB = Depends(get_current_active_user),
+    user: UserInDB = Depends(get_current_user),
     max_distance: float = 50,
     limit: int = 20
 ):
@@ -139,7 +139,7 @@ async def recommend_artisans(
 async def rate_artisan(
     artisan_id: str,
     rating: ArtisanRating,
-    user: UserInDB = Depends(get_current_active_user)
+    user: UserInDB = Depends(get_current_user)
 ):
     # Verify job exists, belongs to user, and is completed
     job = await jobs_collection.find_one({

@@ -4,8 +4,8 @@ from fastapi import BackgroundTasks, HTTPException, Path
 from fastapi import APIRouter, Depends
 
 from database import artisans_collection, jobs_collection, service_requests_collection
-from models import ArtisanProfile, Job, RoleEnum, UserInDB
-from schemas import AdminResponse, ServiceRequestResponse
+from models import Job, RoleEnum, UserInDB
+from schemas import AdminResponse, ArtisanProfileUpdate, ServiceRequestResponse
 from utils import get_user, require_roles, send_email
 
 
@@ -21,9 +21,9 @@ async def admin_dashboard():
     return {"message": "Welcome to the admin dashboard"}
 
 
-@router.patch("/artisan/{artisan_id}", response_model=ArtisanProfile)
+@router.patch("/artisan/{artisan_id}", response_model=ArtisanProfileUpdate)
 async def update_artisan_profile(
-    profile_data: ArtisanProfile,
+    profile_data: ArtisanProfileUpdate,
     artisan_id: str = Path(..., description="The ID of the artisan to update"),
     _: UserInDB = Depends(require_roles([RoleEnum.admin])),
 ):

@@ -55,7 +55,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 # ============================
 # Authentication and Authorization
 # ============================
-async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
     """Get the current active user based on token and required roles"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -120,7 +120,7 @@ async def get_user_from_collection(username: str, role: RoleEnum):
 
 
 def require_roles(required_roles: list[RoleEnum]):
-    async def role_checker(user: UserInDB = Depends(get_current_active_user)):
+    async def role_checker(user: UserInDB = Depends(get_current_user)):
         if RoleEnum(user.role) not in required_roles:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions :(")
         return user
