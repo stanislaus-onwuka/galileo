@@ -1,22 +1,23 @@
 from fastapi import APIRouter, Depends
 
-from models import ArtisanProfile, BaseProfile, CustomerProfile, RoleEnum, SupplierProfile, UserInDB
-from utils import get_collection_by_role, get_current_active_user
+from models import RoleEnum, UserInDB
+from schemas import BaseProfileUpdate, ArtisanProfileUpdate, SupplierProfileUpdate
+from utils import get_collection_by_role, get_current_user
 
 router = APIRouter()
 
 
 @router.patch("/profile/update")
 async def update_profile(
-    profile_update: BaseProfile,
-    current_user: UserInDB = Depends(get_current_active_user),
+    profile_update: BaseProfileUpdate,
+    current_user: UserInDB = Depends(get_current_user),
 ):
     if current_user.role == RoleEnum.customer:
-        profile_class = CustomerProfile
+        profile_class = BaseProfileUpdate
     elif current_user.role == RoleEnum.supplier:
-        profile_class = SupplierProfile
+        profile_class = SupplierProfileUpdate
     elif current_user.role == RoleEnum.artisan:
-        profile_class = ArtisanProfile
+        profile_class = ArtisanProfileUpdate
 
     # Validate the profile data
     validated_profile = profile_class(**profile_update.model_dump(exclude_unset=True))

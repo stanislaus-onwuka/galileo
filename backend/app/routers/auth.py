@@ -8,7 +8,7 @@ from pydantic import EmailStr
 
 from database import guarantors_collection
 from models import Guarantor
-from schemas import UserResponse, UserSignupInput
+from schemas import UserResponse, SignupInput
 from utils import (create_access_token, get_collection_by_role, get_password_hash, get_user, send_email,
                    update_user_password, verify_password)
 
@@ -24,7 +24,7 @@ async def authenticate_user(username: str, password: str) -> bool:
 
 # Routes
 @router.post("/signup", response_model=UserResponse)
-async def signup(user: UserSignupInput):
+async def signup(user: SignupInput):
     # Check if the email is already registered in any collection
     if await get_user(user.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
