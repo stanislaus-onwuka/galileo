@@ -1,6 +1,9 @@
+import os
+
 from datetime import datetime, timezone
 from typing import List
 from bson import ObjectId
+from dotenv import load_dotenv
 
 from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks
 
@@ -8,6 +11,9 @@ from database import artisans_collection, jobs_collection, service_requests_coll
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
 from utils import calculate_distance, get_current_active_user, require_roles, send_email
 from schemas import ArtisanProfileResponse, ArtisanRating, ServiceRequestResponse
+
+load_dotenv()  # load environment variables
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
 router = APIRouter()
 
@@ -63,7 +69,6 @@ async def request_service(
     }
     new_req = await service_requests_collection.insert_one(req_data)
 
-    admin_email = "toluisjoel@gmail.com"
     subject = "New Service Request"
     request_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
@@ -71,27 +76,30 @@ async def request_service(
     A new service request has been created:
     
     Time: {request_time}
+
     Client: {user.firstName} {user.lastName}
+
     Artisan: {artisan['firstName']} {artisan['lastName']}
     Artisan Email: {artisan.get("email", "N/A")}
     Artisan Phone: {artisan.get("phoneNumber", "N/A")}
+
     Service Type: {request.service_type}
     Price Offer: ₦{request.price_offer}
     Description: {request.description or "N/A"}
     """
 
     # Send email notification to admin
-    background_tasks.add_task(send_email, admin_email, subject, content)
+    background_tasks.add_task(send_email, ADMIN_EMAIL, subject, content)
     return await service_requests_collection.find_one({"_id": new_req.inserted_id})
 
 
 @router.get("/jobs", response_model=list[Job])
 async def get_artisan_jobs(
-    current_user: UserInDB = Depends(
+    user: UserInDB = Depends(
         require_roles([RoleEnum.artisan, RoleEnum.admin])
     ),
 ):
-    return await jobs_collection.find({"artisan_id": current_user.id}).to_list(None)
+    return await jobs_collection.find({"artisan_id": user.id}).to_list(None)
 
 
 @router.get("/recommend", response_model=List[ArtisanProfileResponse])
@@ -103,7 +111,7 @@ async def recommend_artisans(
     if not user.location:
         raise HTTPException(status_code=400, detail="User location not set")
 
-    # Query artisans without using geospatial features
+    # Query artisans without using coordiantes
     artisans_cursor = artisans_collection.find({
         "location": {"$exists": True},
     })
@@ -113,7 +121,7 @@ async def recommend_artisans(
     async for artisan in artisans_cursor:
         artisan_location = Coordinates(**artisan["location"])
         distance = calculate_distance(user.location, artisan_location)
-        # If artist is within the specified max_distance, add to list
+        # If artisan is within the specified max_distance, add to list
         if distance <= max_distance:
             artisan_data = {
                 **artisan,
@@ -122,7 +130,7 @@ async def recommend_artisans(
             }
             artisans_with_distance.append(artisan_data)
 
-    # Sort artists by closest distance and apply limit
+    # Sort artisans by closest distance and apply limit
     sorted_artisans = sorted(artisans_with_distance, key=lambda x: x["distance"])
     return sorted_artisans[:limit]
 
@@ -146,7 +154,7 @@ async def rate_artisan(
         )
 
     # Update artisan's rating
-    updated_artisan = await artisans_collection.find_one_and_update(
+    artisan = await artisans_collection.find_one_and_update(
         {"_id": ObjectId(artisan_id)},
         {
             "$inc": {
@@ -156,11 +164,11 @@ async def rate_artisan(
         },
         return_document=True
     )
-    if not updated_artisan:
+    if not artisan:
         raise HTTPException(status_code=404, detail="Artisan not found")
 
     # Calculate and update new rating score
-    new_score = round(updated_artisan["total_ratings"] / updated_artisan["rating_count"], 1)
+    new_score = round(artisan["total_ratings"] / artisan["rating_count"], 1)
     await artisans_collection.update_one(
         {"_id": ObjectId(artisan_id)},
         {"$set": {"avg_rating": new_score}}
