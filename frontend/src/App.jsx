@@ -1,6 +1,4 @@
-// src/App.jsx
-// import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Artisan from "./components/Artisan/Artisan";
 import Admin from "./components/Admin/Admin";
 import ErrorPage from "./ErrorPage";
@@ -16,39 +14,61 @@ import CustomerProfile from "./pages/customer/profile";
 import CustomerWallet from "./pages/customer/profile/wallet";
 import { AuthProvider } from "./context/authContext";
 import ProtectedRoute from "./components/protected-route";
+import { useAuth } from "./context/authContext";
+import { userRoles, userTypes } from "../utils/constants";
 // import Admin from "./pages/Admin";
 // import Regular from "./pages/Regular";
 // import Login from "./pages/Login";
 // import NotFound from "./pages/NotFound";
 
+const AppRoutes = () => {
+    const { user } = useAuth();
+
+
+    return (
+        <Routes>
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            {user && (
+                <>
+                    <Route element={<ProtectedRoute allowedRoles={userRoles} />}>
+                        {user.role === userTypes.CUSTOMER && (
+                            <>
+                                <Route path="/" element={<Customer />} />
+                                <Route path="/:artisanId" element={<ViewArtisan />} />
+                                <Route path="/profile" element={<CustomerProfile />} />
+                                <Route path="/wallet" element={<CustomerWallet />} />
+                            </>
+                        )}
+                        {user.role === userTypes.ADMIN && (
+                            <>
+                                <Route path="/" element={<Navigate to="/admin" />} />
+                                <Route path="/admin" element={<Sidebar />}>
+                                    <Route index element={<Admin />} />
+                                    <Route path="artisan" element={<AdminArtisan />} />
+                                    <Route path="client" element={<Client />} />
+                                    <Route path="admin_alt" element={<AdminAlt />} />
+                                </Route>
+                            </>
+                        )}
+                        {user.role === userTypes.ARTISAN && <Route path="/" element={<Artisan />} />}
+                    </Route>
+                </>
+            )}
+
+            <Route path="*" element={<ErrorPage />} />
+        </Routes>
+    );
+};
+
 const App = () => {
     const update = true;
+
     if (update) {
         return (
             <Router>
                 <AuthProvider>
-                    <Routes>
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/" element={<Login />} />
-                        <Route element={<ProtectedRoute role="admin" />}>
-                            <Route path="/admin/*" element={<Sidebar />}>
-                              <Route index element={<Admin />} />
-                              <Route path="artisan" element={<AdminArtisan />} />
-                              <Route path="client" element={<Client />} />
-                              <Route path="admin_alt" element={<AdminAlt />} />
-                            </Route>
-                        </Route>
-                        <Route element={<ProtectedRoute role="customer" />}>
-                            <Route path="/customer" element={<Customer />} />
-                            <Route path="/customer/:artisanId" element={<ViewArtisan />} />
-                            <Route path="/customer/profile" element={<CustomerProfile />} />
-                            <Route path="/customer/wallet" element={<CustomerWallet />} />
-                        </Route>
-                        <Route element={<ProtectedRoute role="artisan" />}>
-                            <Route path="/artisan" element={<Artisan />} />
-                        </Route>
-                        <Route path="*" element={<ErrorPage />} />
-                    </Routes>
+                    <AppRoutes />
                 </AuthProvider>
             </Router>
         );

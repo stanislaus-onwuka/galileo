@@ -34,7 +34,7 @@ const Login = () => {
         //     console.error("There was an error during login", error);
         // }
 
-        navigate("/customer");
+        navigate("/");
     };
 
     return (

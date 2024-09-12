@@ -19,7 +19,7 @@ function MainLayout({ children }) {
                         !isLoggedIn ? (
                             <button className="rounded-full border-neutral-40 p-1 underline">Login/signup</button>
                         ): (
-                            <Link to="/customer/profile" className="rounded-full border-neutral-40 p-1">Profile</Link>
+                            <Link to="/profile" className="rounded-full border-neutral-40 p-1">Profile</Link>
                         )
                     }
                 

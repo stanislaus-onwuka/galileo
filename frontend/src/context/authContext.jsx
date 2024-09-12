@@ -10,16 +10,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = (userData) => {
     setUser(userData);
-    // Redirect based on role
-    if (userData.role === 'admin') {
-      navigate('/admin');
-    } else if (userData.role === 'customer') {
-      navigate('/');
-    } else if (userData.role === 'artisan') {
-      navigate('/artisan');
-    } else {
-      navigate('/');
-    }
   };
 
   const logout = () => {

@@ -2,24 +2,15 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 
-const ProtectedRoute = ({ role }) => {
+const ProtectedRoute = ({ allowedRoles }) => {
     const { user } = useAuth();
 
     if (!user) {
         return <Navigate to="/login" />;
     }
 
-    if (role && user.role !== role) {
-        // Redirect to appropriate dashboard if role doesn't match
-        if (user.role === "admin") {
-            return <Navigate to="/admin" />;
-        }
-        if (user.role === "customer") {
-            return <Navigate to="/" />;
-        }
-        if (user.role === "artisan") {
-            return <Navigate to="/artisan" />;
-        }
+    if (!allowedRoles.includes(user.role)) {
+        return <Navigate to="/error" />;
     }
 
     return <Outlet />;

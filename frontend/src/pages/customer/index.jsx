@@ -3,8 +3,12 @@ import UpdateProfile from "../../components/customer/update-profile";
 import SearchResults from "../../components/customer/search-results";
 import MainLayout from "../../components/layouts/main-layout";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/authContext";
 
 function Customer() {
+    const { user } = useAuth();
+    console.log(user)
+
     const [showSearchResults, setShowSearchResults] = useState(false);
 
     const artisansList = ["Painters", "Carpenters", "Bricklayers", "Tailor", "Mechanic"];
@@ -25,7 +29,7 @@ function Customer() {
                                 <input
                                     type="text"
                                     placeholder="I'm looking for..."
-                                    className="bg-transparent text-sm w-full"
+                                    className="bg-transparent text-sm w-full text-light-green"
                                 />
                             </div>
                             <div className="flex items-center justify-between">
@@ -69,7 +73,7 @@ function Customer() {
                         </div>
                     </div>
                     <div>
-                        <Link to="/customer/1" className="max-w-[285px]">
+                        <Link to="/1" className="max-w-[285px]">
                             <div className="max-w-[285px]">
                                 <div className="mb-6">
                                     <img src="/assets/imgs/artisan.png" className="rounded-2xl" alt="Service image" />

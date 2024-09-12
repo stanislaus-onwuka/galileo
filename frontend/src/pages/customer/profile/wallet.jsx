@@ -34,25 +34,25 @@ function CustomerWallet() {
                                 ₦
                                 {
                                     showAmount ? (
-                                        <span>25,000</span>
+                                        <span>0</span>
                                     ) : (
                                         <span>******</span>
                                     )
                                 }
                             </h1>
                             <div className="flex gap-[30px] self-center">
-                                <button className="flex flex-col items-center">
+                                <a href="https://stripe.com/pricing" className="flex flex-col items-center" >
                                     <img src="/assets/svgs/customer/fund-wallet.svg" alt="Fund Wallet"/>
                                     <h2 className="text-light-green text-xs mt-[10px] text-center">Fund Wallet</h2>
-                                </button>
-                                <button className="flex flex-col items-center">
+                                </a>
+                                <a href="https://stripe.com/pricing" className="flex flex-col items-center">
                                     <img src="/assets/svgs/customer/send-money.svg" alt="Send Money"/>
                                     <h2 className="text-light-green text-xs mt-[10px] text-center">Send</h2>
-                                </button>
-                                <button className="flex flex-col items-center">
+                                </a>
+                                <a href="https://stripe.com/pricing" className="flex flex-col items-center">
                                     <img src="/assets/svgs/customer/withdraw-money.svg" alt="Withdraw"/>
                                     <h2 className="text-light-green text-xs mt-[10px] text-center">Withdraw</h2>
-                                </button>
+                                </a>
                             </div>
                         </div>
                         <div className="border border-neutral-40 rounded-xl bg-white w-full">
