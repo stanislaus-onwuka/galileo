@@ -1,14 +1,13 @@
 import random
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import EmailStr
 
-from database import guarantors_collection
-from models import Guarantor
-from schemas import UserResponse, SignupInput
+from models import User
+from schemas import LoginForm, UserResponse
 from utils import (create_access_token, get_collection_by_role, get_password_hash, get_user, send_email,
                    update_user_password, verify_password)
 
@@ -17,14 +16,14 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-async def authenticate_user(username: str, password: str) -> bool:
-    user = await get_user(username)
+async def authenticate_user(email: str, password: str) -> bool:
+    user = await get_user(email, by_email=True)
     return user if user and verify_password(password, user.password) else False
 
 
 # Routes
 @router.post("/signup", response_model=UserResponse)
-async def signup(user: SignupInput):
+async def signup(user: User):
     # Check if the email is already registered in any collection
     if await get_user(user.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
@@ -38,16 +37,6 @@ async def signup(user: SignupInput):
         {**user.model_dump(exclude={"password", "guarantor_firstName", "guarantor_lastName", "guarantor_phoneNumber"}), 
         "password": get_password_hash(user.password)}
     )
-    user_id = str(user_result.inserted_id)
-
-    # Create and insert Guarantor
-    guarantor = Guarantor(
-        first_name=user.guarantor_firstName,
-        last_name=user.guarantor_lastName,
-        phone_number=user.guarantor_phoneNumber,
-        user_id=user_id
-    )
-    await guarantors_collection.insert_one(guarantor.model_dump())
 
     # Generate auth access token and return response
     created_user = await user_collection.find_one({"_id": user_result.inserted_id})
@@ -60,15 +49,14 @@ async def signup(user: SignupInput):
         access_token=access_token
     )
 
-
 @router.post("/login", response_model=UserResponse)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await authenticate_user(form_data.username, form_data.password)
+async def login(form_data: LoginForm):
+    user: User = await authenticate_user(form_data.email, form_data.password)
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

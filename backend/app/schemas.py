@@ -18,7 +18,6 @@ class BaseModelWithID(BaseModel):
         json_encoders = {ObjectId: str}
 
 
-
 # ================================
 # User Models
 # ================================
@@ -29,16 +28,9 @@ class UserResponse(BaseModel):
     access_token: Optional[str] = None
 
 
-class SignupInput(BaseModel):
-    firstName: str = Field(..., min_length=3, max_length=50)
-    lastName: str = Field(..., min_length=3, max_length=50)
-    username: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr
-    role: RoleEnum
-    password: str = Field(..., min_length=6)
-    guarantor_firstName: str = Field(..., min_length=3, max_length=50)
-    guarantor_lastName: str = Field(..., min_length=3, max_length=50)
-    guarantor_phoneNumber: str = Field(..., min_length=10, max_length=15)
+class LoginForm(BaseModel):
+    email: str
+    password: str
 
 
 # ================================
