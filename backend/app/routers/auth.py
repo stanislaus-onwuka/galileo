@@ -51,7 +51,7 @@ async def signup(user: User):
 
 @router.post("/login", response_model=UserResponse)
 async def login(form_data: LoginForm):
-    user = await authenticate_user(form_data.username, form_data.password)
+    user: User = await authenticate_user(form_data.email, form_data.password)
 
     if not user:
         raise HTTPException(

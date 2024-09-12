@@ -29,7 +29,7 @@ class UserResponse(BaseModel):
 
 
 class LoginForm(BaseModel):
-    username: str
+    email: str
     password: str
 
 
