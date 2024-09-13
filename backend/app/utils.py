@@ -184,6 +184,52 @@ async def send_email(recipient_email, subject, content):
     print(result.json())
 
 
+
+# ============================
+# Artisans
+# ============================
+async def get_cached_recommendations(user: UserInDB, limit: int) -> list[dict]:
+    """Fetch cached recommendations if they're recent, already sorted."""
+    last_rec_update = user.last_recommendation_update.replace(tzinfo=timezone.utc)
+    if user.recommended_artisans and (datetime.now(timezone.utc) - last_rec_update) < timedelta(hours=24):
+        return user.recommended_artisans[:limit]
+    return []
+
+async def generate_recommendations(user: UserInDB, max_distance: float, limit: int) -> list[dict]:
+    """Generate new recommendations based on user location and max distance."""
+    if not user.location:
+        return []
+
+    artisans_cursor = artisans_collection.find({"location": {"$exists": True}})
+
+    artisans_with_distance = []
+    async for artisan in artisans_cursor:
+        artisan_location = Coordinates(**artisan["location"])
+        distance = calculate_distance(user.location, artisan_location)
+        if distance <= max_distance:
+            artisan_data = {
+                **artisan,
+                "id": str(artisan["_id"]),
+                "distance": round(distance, 2)
+            }
+            artisans_with_distance.append(artisan_data)
+
+    sorted_artisans = sorted(artisans_with_distance, key=lambda x: sort_artisans_key(x))
+    return sorted_artisans[:limit]
+
+async def update_user_recommendations(user: UserInDB, recommendations: list[dict]):
+    """Update user's cached recommendations."""
+    users_collection = get_collection_by_role(user.role)
+    await users_collection.update_one(
+        {"email": user.email},
+        {
+            "$set": {
+                "recommended_artisans": recommendations,
+                "last_recommendation_update": datetime.now(timezone.utc)
+            }
+        }
+    )
+
 # ============================
 # Others
 # ============================

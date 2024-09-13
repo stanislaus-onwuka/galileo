@@ -49,6 +49,7 @@ class BaseProfileResponse(BaseModelWithID):
 class ArtisanProfileResponse(BaseProfileResponse):
     rating_count: float = 0
     avg_rating: float = 0
+    distance: float = None
     services: Optional[list[str]] = []
     min_service_rate: Optional[int] = 0
     max_service_rate: Optional[int] = 0

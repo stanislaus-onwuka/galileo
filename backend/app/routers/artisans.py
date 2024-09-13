@@ -9,7 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks, Qu
 
 from database import artisans_collection, jobs_collection, service_requests_collection
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
-from utils import calculate_distance, get_current_user, require_roles, send_email, sort_artisans_key
+from utils import (calculate_distance, generate_recommendations, get_cached_recommendations, get_current_user,
+                   require_roles, send_email, sort_artisans_key, update_user_recommendations)
 from schemas import ArtisanProfileResponse, ArtisanRating, ServiceRequestResponse
 
 load_dotenv()  # load environment variables
@@ -97,40 +98,25 @@ async def get_artisan_jobs(
 
 @router.get("/recommend", response_model=List[ArtisanProfileResponse])
 async def recommend_artisans(
-    user: UserInDB = Depends(get_current_user),
+    background_tasks: BackgroundTasks,
+    limit: int = 10,
     max_distance: float = 50,
-    limit: int = 20
+    user: UserInDB = Depends(get_current_user),
 ):
     if not user.location:
         raise HTTPException(status_code=400, detail="User location not set")
 
-    # Query artisans without using coordiantes
-    artisans_cursor = artisans_collection.find({
-        "location": {"$exists": True},
-    })
+    # Try to get cached recommendations
+    recommended_artisans = await get_cached_recommendations(user, limit)
 
-    # Calculate distances and filter artisans
-    artisans_with_distance = []
-    async for artisan in artisans_cursor:
-        artisan_location = Coordinates(**artisan["location"])
-        distance = calculate_distance(user.location, artisan_location)
-        # If artisan is within the specified max_distance, add to list
-        if distance <= max_distance:
-            artisan_data = {
-                **artisan,
-                "id": str(artisan["_id"]),
-                "distance": distance
-            }
-            artisans_with_distance.append(artisan_data)
+    # If no cached recommendations, generate new ones
+    if not recommended_artisans:
+        recommended_artisans = await generate_recommendations(user, max_distance, limit)
+        
+        # Update user's cached recommendations in the background
+        background_tasks.add_task(update_user_recommendations, user, recommended_artisans)
 
-    # Sort artisans by closest distance and apply limit
-    sorted_artisans = sorted(
-        artisans_with_distance, 
-        key=lambda x: sort_artisans_key(x)  # No target rating provided
-    )
-
-    return sorted_artisans[:limit]
-
+    return recommended_artisans
 
 @router.get("/filter", response_model=List[ArtisanProfileResponse])
 async def filter_artisans(
