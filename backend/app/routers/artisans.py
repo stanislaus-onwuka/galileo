@@ -5,11 +5,11 @@ from typing import List
 from bson import ObjectId
 from dotenv import load_dotenv
 
-from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks, Query
 
 from database import artisans_collection, jobs_collection, service_requests_collection
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
-from utils import calculate_distance, get_current_user, require_roles, send_email
+from utils import calculate_distance, get_current_user, require_roles, send_email, sort_artisans_key
 from schemas import ArtisanProfileResponse, ArtisanRating, ServiceRequestResponse
 
 load_dotenv()  # load environment variables
@@ -124,7 +124,49 @@ async def recommend_artisans(
             artisans_with_distance.append(artisan_data)
 
     # Sort artisans by closest distance and apply limit
-    sorted_artisans = sorted(artisans_with_distance, key=lambda x: x["distance"])
+    sorted_artisans = sorted(
+        artisans_with_distance, 
+        key=lambda x: sort_artisans_key(x)  # No target rating provided
+    )
+
+    return sorted_artisans[:limit]
+
+
+@router.get("/filter", response_model=List[ArtisanProfileResponse])
+async def filter_artisans(
+    user: UserInDB = Depends(get_current_user),
+    artisan_rating: float = Query(None, ge=0, le=5),
+    location: str = Query(None, description="Address to search"),
+    proximity: float = Query(100, description="Proximity in kilometers"),
+    limit: int = Query(20, description="Maximum number of results to return")
+):
+    query = {"location": {"$exists": True}}
+
+    if artisan_rating is not None:
+        query["avg_rating"] = {"$gte": artisan_rating}
+
+    if location:
+        query["address"] = {"$regex": location, "$options": "i"}
+
+    artisans_cursor = artisans_collection.find(query)
+
+    filtered_artisans = []
+    async for artisan in artisans_cursor:
+        artisan_location = Coordinates(**artisan["location"])
+        if user.location:
+            distance = calculate_distance(user.location, artisan_location)
+            if distance <= proximity:
+                artisan["distance"] = distance
+                filtered_artisans.append(artisan)
+        else:
+            artisan["distance"] = None
+            filtered_artisans.append(artisan)
+
+    sorted_artisans = sorted(
+        filtered_artisans,
+        key=lambda x: sort_artisans_key(x, artisan_rating)
+    )
+
     return sorted_artisans[:limit]
 
 
