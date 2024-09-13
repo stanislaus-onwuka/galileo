@@ -27,13 +27,6 @@ async def artisan_dashboard():
     return {"message": "Welcome to the artisan dashboard"}
 
 
-@router.get("/all", response_model=list[ArtisanProfileResponse])
-async def get_all_artisans(
-    collection=Depends(get_artisans_collection)
-):
-    return await collection.find().to_list(length=None)
-
-
 @router.get("/profile/{artisan_id}", response_model=ArtisanProfileResponse)
 async def artisan_profile(
     artisan_id: str = Path(..., description="The ID of the artisan to update"),

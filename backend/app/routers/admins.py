@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from database import artisans_collection, jobs_collection, service_requests_collection
 from models import Job, RoleEnum, UserInDB
-from schemas import AdminResponse, ArtisanProfileUpdate, ServiceRequestResponse
+from schemas import AdminResponse, ArtisanProfileResponse, ArtisanProfileUpdate, ServiceRequestResponse
 from utils import get_user, require_roles, send_email
 
 
@@ -21,7 +21,14 @@ async def admin_dashboard():
     return {"message": "Welcome to the admin dashboard"}
 
 
-@router.patch("/artisan/{artisan_id}", response_model=ArtisanProfileUpdate)
+@router.get("/artisans/all", response_model=list[ArtisanProfileResponse])
+async def get_all_artisans(
+    collection=Depends(lambda: artisans_collection)
+):
+    return await collection.find().to_list(length=None)
+
+
+@router.patch("/artisans/{artisan_id}", response_model=ArtisanProfileUpdate)
 async def update_artisan_profile(
     profile_data: ArtisanProfileUpdate,
     artisan_id: str = Path(..., description="The ID of the artisan to update"),
