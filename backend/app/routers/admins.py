@@ -10,7 +10,7 @@ from database import (
 from models import Job, RoleEnum, UserInDB
 from schemas import (
     AdminResponse,
-    ArtisanProfileResponse, ArtisanProfileUpdate,
+    ArtisanProfileResponse, AdminArtisanProfileUpdate,
     BaseProfileResponse, ServiceRequestResponse
 )
 from utils import get_user, require_roles, send_email
@@ -47,9 +47,9 @@ async def get_all_artisans(
     return await artisans_collection.find().to_list(length=None)
 
 
-@router.patch("/artisans/{artisan_id}", response_model=ArtisanProfileUpdate)
+@router.patch("/artisans/{artisan_id}", response_model=ArtisanProfileResponse)
 async def update_artisan_profile(
-    profile_data: ArtisanProfileUpdate,
+    profile_data: AdminArtisanProfileUpdate,
     artisan_id: str = Path(..., description="The ID of the artisan to update"),
     _: UserInDB = Depends(require_roles([RoleEnum.admin])),
 ):

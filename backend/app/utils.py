@@ -12,7 +12,10 @@ from pymongo.collection import Collection
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from database import artisans_collection, customers_collection, suppliers_collection
+from database import (
+     admins_collection, artisans_collection, 
+     customers_collection, suppliers_collection
+)
 from models import Coordinates, RoleEnum, UserInDB
 
 load_dotenv()  # load environment variables
@@ -132,7 +135,7 @@ def require_roles(required_roles: list[RoleEnum]):
 # ============================
 async def get_user(identifier: str, by_email: bool = False, by_id: bool = False) -> UserInDB:
     """Retrieve a user from any collection based on the identifier (email, username, or id)"""
-    collections = [customers_collection, artisans_collection, suppliers_collection]
+    collections = [admins_collection, customers_collection, artisans_collection, suppliers_collection]
     query_field = "email" if by_email else "_id" if by_id else "username"
 
     for collection in collections:

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from bson import ObjectId
+from fastapi import File, UploadFile
 from models import Coordinates, RoleEnum, ServiceRequest
 from pydantic import BaseModel, EmailStr, Field, validator
 
@@ -98,6 +99,10 @@ class ArtisanProfileUpdate(BaseProfileUpdate):
     max_service_rate: Optional[int] = 0
     services: Optional[list[str]] = []
     business_name: Optional[str] = Field(None, min_length=3, max_length=100)
+
+
+class AdminArtisanProfileUpdate(ArtisanProfileUpdate):
+    qualification: int = 0
 
 
 class SupplierProfileUpdate(ArtisanProfileUpdate):
