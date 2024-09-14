@@ -1,19 +1,21 @@
 from bson import ObjectId
 
-from fastapi import BackgroundTasks, HTTPException, Path
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path
 
-from database import artisans_collection, jobs_collection, service_requests_collection
+from database import (
+    artisans_collection,
+    customers_collection, jobs_collection,
+    service_requests_collection, suppliers_collection
+)
 from models import Job, RoleEnum, UserInDB
-from schemas import AdminResponse, ArtisanProfileResponse, ArtisanProfileUpdate, ServiceRequestResponse
+from schemas import (
+    AdminResponse,
+    ArtisanProfileResponse, ArtisanProfileUpdate,
+    BaseProfileResponse, ServiceRequestResponse
+)
 from utils import get_user, require_roles, send_email
 
-
 router = APIRouter()
-
-
-async def get_artisans_collection():
-    return artisans_collection
 
 
 @router.get("/dashboard")
@@ -21,11 +23,28 @@ async def admin_dashboard():
     return {"message": "Welcome to the admin dashboard"}
 
 
-@router.get("/artisans/all", response_model=list[ArtisanProfileResponse])
+@router.get("/customers", response_model=list[BaseProfileResponse])
 async def get_all_artisans(
-    collection=Depends(lambda: artisans_collection)
+    _: UserInDB = Depends(require_roles([RoleEnum.admin]))
 ):
-    return await collection.find().to_list(length=None)
+    return await customers_collection.find().to_list(length=None)
+
+
+@router.get("/suppliers", response_model=list[BaseProfileResponse])
+async def get_all_artisans(
+    _: UserInDB = Depends(require_roles([RoleEnum.admin]))
+):
+    return await suppliers_collection.find().to_list(length=None)
+
+
+# ============================
+# Artisans Admin
+# ============================
+@router.get("/artisans", response_model=list[ArtisanProfileResponse])
+async def get_all_artisans(
+    _: UserInDB = Depends(require_roles([RoleEnum.admin]))
+):
+    return await artisans_collection.find().to_list(length=None)
 
 
 @router.patch("/artisans/{artisan_id}", response_model=ArtisanProfileUpdate)
@@ -48,6 +67,9 @@ async def update_artisan_profile(
     return await artisans_collection.find_one({"_id": artisan_id})
 
 
+# ============================
+# Service Requests
+# ============================
 @router.get("/requests/pending", response_model=list[ServiceRequestResponse])
 async def list_pending_service_requests(
     _: UserInDB = Depends(require_roles([RoleEnum.admin]))
@@ -67,7 +89,8 @@ async def admin_respond_to_service_request(
     # Validate service request exists
     service_request = await service_requests_collection.find_one({"_id": ObjectId(request_id)})
     if not service_request:
-        raise HTTPException(status_code=404, detail="Service request not found")
+        raise HTTPException(
+            status_code=404, detail="Service request not found")
 
     # Check if the request is already accepted
     if service_request.get("status") == "accepted":
@@ -75,10 +98,12 @@ async def admin_respond_to_service_request(
         if job:
             return job
         else:
-            raise HTTPException(status_code=404, detail="Job not found for accepted service request")
+            raise HTTPException(
+                status_code=404, detail="Job not found for accepted service request")
 
     if response.action not in ["accept", "decline"]:
-        raise HTTPException(status_code=400, detail="Invalid action. Must be 'accept' or 'decline'")
+        raise HTTPException(
+            status_code=400, detail="Invalid action. Must be 'accept' or 'decline'")
 
     if response.action == "accept":
         # Create a job
@@ -139,4 +164,5 @@ async def admin_respond_to_service_request(
         # Delete the service request
         await service_requests_collection.delete_one({"_id": ObjectId(request_id)})
 
-        raise HTTPException(status_code=200, detail="Service request declined and deleted")
+        raise HTTPException(
+            status_code=200, detail="Service request declined and deleted")
