@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import axios from "axios";
 import AuthLayout from "../components/layouts/auth-layout";
+import { useMutation } from "@tanstack/react-query";
+import authApi from "../api/auth";
+import { useAuth } from "../context/authContext";
+import toast from "react-hot-toast";
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const [formData, setFormData] = useState({
         email: "",
@@ -18,24 +22,40 @@ const Login = () => {
         });
     };
 
-    const handleSubmit = async (e) => {
+    const loginUser = useMutation({
+        mutationFn: (data) => {
+            return authApi.loginUser(data);
+        },
+    });
+
+
+    const handleSubmit =  (e) => {
         e.preventDefault();
-        //   const form_data = new FormData()
-        //   form_data.append('username', formData.username)
-        //   form_data.append('password', formData.password)
 
-        // try {
-        //     const response = await axios.post("http://localhost:8000/auth/login", formData);
-        //     console.log(response.data);
+        const form_data = new FormData()
+        form_data.append('email', formData.email)
+        form_data.append('password', formData.password) 
+        
 
-        //     return navigate("/admin");
-        //     // Handle successful signup (e.g., redirect to login)
-        // } catch (error) {
-        //     console.error("There was an error during login", error);
-        // }
-
-        navigate("/");
+        loginUser.mutate(
+            {
+                email: formData.email,
+                password: formData.password
+            }, 
+            {
+                onSuccess(data) {
+                    login(data)
+                    // toast.success("Login successful")
+                    navigate("/")
+                },
+                onError(error) {
+                    toast.error(error.message)
+                }
+            }
+        )
+        
     };
+
 
     return (
         <AuthLayout>
@@ -47,7 +67,7 @@ const Login = () => {
                     <h3 className="text-[32px] leading-[120%] font-bold">Sign in to Galileo</h3>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-[354px]">
+                <form className="flex flex-col gap-4 w-full max-w-[354px]">
                     <input
                         type="email"
                         name="email"
@@ -67,7 +87,7 @@ const Login = () => {
                         className="px-4 py-[15.5px] rounded-lg border border-[#EAECF0]"
                     />
                     <button
-                        type="submit"
+                        onClick={handleSubmit}
                         className="rounded py-3 text-base bg-default w-full font-bold mt-[26px] mb-7 text-white"
                     >
                         Login

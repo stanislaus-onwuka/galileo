@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import axios from "axios";
 import AuthLayout from "../components/layouts/auth-layout";
+import { useMutation } from "@tanstack/react-query";
+import authApi from "../api/auth";
+import { useAuth } from "../context/authContext";
+import toast from "react-hot-toast";
 
 const Signup = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [step, setStep] = useState(1);
+    const { login } = useAuth();
 
     const navigate = useNavigate();
 
@@ -27,24 +31,30 @@ const Signup = () => {
         });
     };
 
+    const registerUser = useMutation({
+        mutationFn: (data) => {
+            return authApi.registerUser(data);
+        },
+    });
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // try {
-        //     const response = await axios.post("http://localhost:8000/auth/signup", formData);
-        //     console.log(response.data);
 
-        //     navigate("/login");
-        // } catch (error) {
-        //     console.error("There was an error during signup", error);
-        // }
-
-        navigate("/login");
+        registerUser.mutate(formData, {
+            onSuccess(data) {
+                login(data);
+                navigate("/");
+            },
+            onError(error) {
+                toast.error(error.message);
+            },
+        });
     };
 
     return (
         <AuthLayout>
             <>
-                <div className="flex flex-col items-center mb-[80px]">
+                <div className="flex flex-col items-center mb-[60px]">
                     <div className="mb-10">
                         <img src="/assets/svgs/customer/company-logo.svg" alt="Logo" />
                     </div>
@@ -75,6 +85,15 @@ const Signup = () => {
                                 className="px-4 py-[15.5px] rounded-lg border border-[#EAECF0]"
                             />
                             <input
+                                type="text"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleChange}
+                                placeholder="Username"
+                                required
+                                className="px-4 py-[15.5px] rounded-lg border border-[#EAECF0]"
+                            />
+                            <input
                                 type="email"
                                 name="email"
                                 value={formData.email}
@@ -86,24 +105,16 @@ const Signup = () => {
                             <button
                                 type="submit"
                                 className="rounded py-3 text-base bg-default w-full font-bold mt-[26px] mb-7 text-white"
-                                onClick={()=>setStep(2)}
+                                onClick={() => setStep(2)}
                             >
                                 Continue
                             </button>
                         </div>
                     ) : null}
 
-                    {/* <input
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                        placeholder="Username"
-                        required
-                    /> */}
                     {step === 2 ? (
                         <div>
-                            <button className="mb-6" onClick={()=>setStep(1)}>
+                            <button className="mb-6" onClick={() => setStep(1)}>
                                 {"<"} Back
                             </button>
                             <div className="flex justify-between gap-2 px-4 py-[15.5px] rounded-lg border border-[#EAECF0] mb-1">
@@ -145,7 +156,7 @@ const Signup = () => {
                             <button
                                 type="submit"
                                 className="rounded py-3 text-base bg-default w-full font-bold mt-[26px] mb-7 text-white"
-                                onClick={()=>setStep(3)}
+                                onClick={() => setStep(3)}
                             >
                                 Continue
                             </button>
@@ -154,7 +165,7 @@ const Signup = () => {
 
                     {step === 3 ? (
                         <div className="flex flex-col">
-                            <button className="mb-6 self-start" onClick={()=>setStep(2)}>
+                            <button className="mb-6 self-start" onClick={() => setStep(2)}>
                                 {"<"} Back
                             </button>
                             <label htmlFor="role">Select Role:</label>

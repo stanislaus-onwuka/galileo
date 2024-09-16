@@ -7,7 +7,7 @@ import { useAuth } from "../../context/authContext";
 
 function Customer() {
     const { user } = useAuth();
-    console.log(user)
+    console.log(user);
 
     const [showSearchResults, setShowSearchResults] = useState(false);
 

@@ -16,14 +16,12 @@ import { AuthProvider } from "./context/authContext";
 import ProtectedRoute from "./components/protected-route";
 import { useAuth } from "./context/authContext";
 import { userRoles, userTypes } from "../utils/constants";
-// import Admin from "./pages/Admin";
-// import Regular from "./pages/Regular";
-// import Login from "./pages/Login";
-// import NotFound from "./pages/NotFound";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "../utils/queryClient";
+import { Toaster } from "react-hot-toast";
 
 const AppRoutes = () => {
     const { user } = useAuth();
-
 
     return (
         <Routes>
@@ -62,39 +60,15 @@ const AppRoutes = () => {
 };
 
 const App = () => {
-    const update = true;
-
-    if (update) {
-        return (
-            <Router>
+    return (
+        <Router>
+            <QueryClientProvider client={queryClient}>
                 <AuthProvider>
+                    <Toaster />
                     <AppRoutes />
                 </AuthProvider>
-            </Router>
-        );
-    }
-    return (
-        <AuthProvider>
-            <Router>
-                <Routes>
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/admin/*" element={<Sidebar />}>
-                        <Route index element={<Admin />} />
-                        <Route path="artisan" element={<AdminArtisan />} />
-                        <Route path="client" element={<Client />} />
-                        <Route path="admin_alt" element={<AdminAlt />} />
-                    </Route>
-                    {/* <Route path="/login" element={<Login />} /> */}
-                    <Route path="/" element={<Artisan />} />
-                    <Route path="/customer" element={<Customer />} />
-                    <Route path="/customer/:artisanId" element={<ViewArtisan />} />
-                    <Route path="/customer/profile" element={<CustomerProfile />} />
-                    <Route path="/customer/wallet" element={<CustomerWallet />} />
-                    <Route path="*" element={<ErrorPage />} />
-                </Routes>
-            </Router>
-        </AuthProvider>
+            </QueryClientProvider>
+        </Router>
     );
 };
 
