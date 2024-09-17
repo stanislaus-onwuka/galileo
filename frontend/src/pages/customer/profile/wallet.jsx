@@ -15,7 +15,7 @@ function CustomerWallet() {
                     </div>
                 </div>
                 <section>
-                    <h1 className="text-[39px] leading-[120%] mb-[60px]">My Profile</h1>
+                    <h1 className="text-[39px] leading-[120%] mb-[60px]">Wallet</h1>
                     <div className="flex gap-5">
                         <div className="p-4 rounded-xl bg-background flex flex-col w-full">
                             <div className="flex gap-2">

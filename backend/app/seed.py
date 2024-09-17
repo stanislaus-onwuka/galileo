@@ -23,7 +23,7 @@ async def insert_artisans_from_csv(csv_file_path):
                 "username": "username",
                 "firstName": f"Artisan {index}",
                 "lastName": "Doe",
-                "phoneNumber": "+2349013390589",
+                "phone_number": "+2349013390589",
                 "email": f"artisan{index}@example.com",
                 "role": "artisan",
                 "address": row["Address"],

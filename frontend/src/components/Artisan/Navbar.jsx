@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi"; // Import menu icons from react-icons
 import { NavLink } from "react-router-dom";
 
@@ -10,14 +10,13 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="text-white p-4">
+    <nav className="text-white p-4 mb-10">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo Section */}
         <div className={`${isOpen ? "hidden" : "flex items-center space-x-4"}`}>
           <div>
-            <img src="/assets/svgs/customer/company-logo.svg"/>
+            <img src="/assets/svgs/full-logo.svg" />
           </div>
-          <h2 className="text-2xl font-bold">Galileo</h2>
         </div>
 
         {/* Menu Items - Hidden on Mobile */}
@@ -26,15 +25,21 @@ const Navbar = () => {
             isOpen ? "block" : "hidden"
           } md:flex space-x-6 md:space-x-6 mt-4 md:mt-0 md:items-center`}
         >
-          <li className="hover:text-gray-400 cursor-pointer">Dashboard</li>
-
-          <NavLink to="/admin/*">
-            <li className="hover:text-gray-400 cursor-pointer">Admin</li>
+          <NavLink to="/">
+            <li className="hover:text-gray-400 cursor-pointer">Dashboard</li>
           </NavLink>
-
-          <li className="hover:text-gray-400 cursor-pointer">Quotations</li>
-          <li className="hover:text-gray-400 cursor-pointer">Inventory</li>
-          <li className="hover:text-gray-400 cursor-pointer">Wallet</li>
+          <NavLink to="/jobs">
+            <li className="hover:text-gray-400 cursor-pointer">Jobs</li>
+          </NavLink>
+          <NavLink to="/quotations">
+            <li className="hover:text-gray-400 cursor-pointer">Quotations</li>
+          </NavLink>
+          <NavLink to="/inventory">
+            <li className="hover:text-gray-400 cursor-pointer">Inventory</li>
+          </NavLink>
+          <NavLink to="/wallet">
+            <li className="hover:text-gray-400 cursor-pointer">Wallet</li>
+          </NavLink>
         </ul>
 
         {/* Hamburger Icon for Mobile */}
@@ -51,12 +56,6 @@ const Navbar = () => {
               isOpen ? "hidden" : "hidden"
             } lg:flex items-center justify-center space-x-6 mt-4 lg:mt-0`}
           >
-            <button className="bg-blue-600 px-4 py-2 rounded text-white hover:bg-blue-500">
-              New Quote
-            </button>
-            <button className="bg-gray-700 px-4 py-2 rounded text-white hover:bg-gray-600">
-              View Quotes
-            </button>
             <div className="flex items-center space-x-3">
               <i className="fas fa-search cursor-pointer hover:text-gray-400"></i>
               <i className="fas fa-bell cursor-pointer hover:text-gray-400"></i>

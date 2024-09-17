@@ -1,4 +1,3 @@
-// import React, { useState } from "react";
 import {
   LineChart,
   Line,
@@ -9,7 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { orders, ordersOverview } from "./data";
-// import Sidebar from "./Sidebar";
+
 
 const Admin = () => {
   // Sample data for the chart
@@ -22,7 +21,6 @@ const Admin = () => {
     { name: "Jun", pts: 5 },
   ];
 
-  // Sample data for the orders list
 
   return (
     <>

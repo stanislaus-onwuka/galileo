@@ -12,7 +12,10 @@ from pymongo.collection import Collection
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from database import artisans_collection, customers_collection, suppliers_collection
+from database import (
+     admins_collection, artisans_collection, 
+     customers_collection, suppliers_collection
+)
 from models import Coordinates, RoleEnum, UserInDB
 
 load_dotenv()  # load environment variables
@@ -132,7 +135,7 @@ def require_roles(required_roles: list[RoleEnum]):
 # ============================
 async def get_user(identifier: str, by_email: bool = False, by_id: bool = False) -> UserInDB:
     """Retrieve a user from any collection based on the identifier (email, username, or id)"""
-    collections = [customers_collection, artisans_collection, suppliers_collection]
+    collections = [admins_collection, customers_collection, artisans_collection, suppliers_collection]
     query_field = "email" if by_email else "_id" if by_id else "username"
 
     for collection in collections:
@@ -184,6 +187,52 @@ async def send_email(recipient_email, subject, content):
     print(result.json())
 
 
+
+# ============================
+# Artisans
+# ============================
+async def get_cached_recommendations(user: UserInDB, limit: int) -> list[dict]:
+    """Fetch cached recommendations if they're recent, already sorted."""
+    last_rec_update = user.last_recommendation_update.replace(tzinfo=timezone.utc)
+    if user.recommended_artisans and (datetime.now(timezone.utc) - last_rec_update) < timedelta(hours=24):
+        return user.recommended_artisans[:limit]
+    return []
+
+async def generate_recommendations(user: UserInDB, max_distance: float, limit: int) -> list[dict]:
+    """Generate new recommendations based on user location and max distance."""
+    if not user.location:
+        return []
+
+    artisans_cursor = artisans_collection.find({"location": {"$exists": True}})
+
+    artisans_with_distance = []
+    async for artisan in artisans_cursor:
+        artisan_location = Coordinates(**artisan["location"])
+        distance = calculate_distance(user.location, artisan_location)
+        if distance <= max_distance:
+            artisan_data = {
+                **artisan,
+                "id": str(artisan["_id"]),
+                "distance": round(distance, 2)
+            }
+            artisans_with_distance.append(artisan_data)
+
+    sorted_artisans = sorted(artisans_with_distance, key=lambda x: sort_artisans_key(x))
+    return sorted_artisans[:limit]
+
+async def update_user_recommendations(user: UserInDB, recommendations: list[dict]):
+    """Update user's cached recommendations."""
+    users_collection = get_collection_by_role(user.role)
+    await users_collection.update_one(
+        {"email": user.email},
+        {
+            "$set": {
+                "recommended_artisans": recommendations,
+                "last_recommendation_update": datetime.now(timezone.utc)
+            }
+        }
+    )
+
 # ============================
 # Others
 # ============================
@@ -202,3 +251,20 @@ def calculate_distance(coord1: Coordinates, coord2: Coordinates) -> float:
         math.cos(lat2) * math.sin(dlon/2)**2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     return R * c
+
+def sort_artisans_key(artisan: dict, target_rating: float = None) -> tuple:
+    """
+    Returns a sorting key for an artisan based on distance and rating.
+    If a target rating is provided, it sorts based on proximity to that rating.
+    Otherwise, it sorts by distance and then by rating.
+    """
+    distance = artisan.get("distance") or float('inf')
+    rating = artisan.get("avg_rating") or 0
+
+    if target_rating is None:
+        # Sort by distance, then by rating (higher ratings first)
+        return (distance, -rating)
+
+    # Sort by proximity to target rating
+    rating_diff = abs(rating - target_rating)
+    return (distance, rating_diff)

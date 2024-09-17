@@ -5,11 +5,12 @@ from typing import List
 from bson import ObjectId
 from dotenv import load_dotenv
 
-from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks, Query
 
 from database import artisans_collection, jobs_collection, service_requests_collection
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
-from utils import calculate_distance, get_current_user, require_roles, send_email
+from utils import (calculate_distance, generate_recommendations, get_cached_recommendations, get_current_user,
+                   require_roles, send_email, sort_artisans_key, update_user_recommendations)
 from schemas import ArtisanProfileResponse, ArtisanRating, ServiceRequestResponse
 
 load_dotenv()  # load environment variables
@@ -25,13 +26,6 @@ def get_artisans_collection():
 @router.get("/dashboard")
 async def artisan_dashboard():
     return {"message": "Welcome to the artisan dashboard"}
-
-
-@router.get("/all", response_model=list[ArtisanProfileResponse])
-async def get_all_artisans(
-    collection=Depends(get_artisans_collection)
-):
-    return await collection.find().to_list(length=None)
 
 
 @router.get("/profile/{artisan_id}", response_model=ArtisanProfileResponse)
@@ -104,34 +98,61 @@ async def get_artisan_jobs(
 
 @router.get("/recommend", response_model=List[ArtisanProfileResponse])
 async def recommend_artisans(
-    user: UserInDB = Depends(get_current_user),
+    background_tasks: BackgroundTasks,
+    limit: int = 10,
     max_distance: float = 50,
-    limit: int = 20
+    user: UserInDB = Depends(get_current_user),
 ):
     if not user.location:
         raise HTTPException(status_code=400, detail="User location not set")
 
-    # Query artisans without using coordiantes
-    artisans_cursor = artisans_collection.find({
-        "location": {"$exists": True},
-    })
+    # Try to get cached recommendations
+    recommended_artisans = await get_cached_recommendations(user, limit)
 
-    # Calculate distances and filter artisans
-    artisans_with_distance = []
+    # If no cached recommendations, generate new ones
+    if not recommended_artisans:
+        recommended_artisans = await generate_recommendations(user, max_distance, limit)
+        
+        # Update user's cached recommendations in the background
+        background_tasks.add_task(update_user_recommendations, user, recommended_artisans)
+
+    return recommended_artisans
+
+@router.get("/filter", response_model=List[ArtisanProfileResponse])
+async def filter_artisans(
+    user: UserInDB = Depends(get_current_user),
+    artisan_rating: float = Query(None, ge=0, le=5),
+    location: str = Query(None, description="Address to search"),
+    proximity: float = Query(100, description="Proximity in kilometers"),
+    limit: int = Query(20, description="Maximum number of results to return")
+):
+    query = {"location": {"$exists": True}}
+
+    if artisan_rating is not None:
+        query["avg_rating"] = {"$gte": artisan_rating}
+
+    if location:
+        query["address"] = {"$regex": location, "$options": "i"}
+
+    artisans_cursor = artisans_collection.find(query)
+
+    filtered_artisans = []
     async for artisan in artisans_cursor:
         artisan_location = Coordinates(**artisan["location"])
-        distance = calculate_distance(user.location, artisan_location)
-        # If artisan is within the specified max_distance, add to list
-        if distance <= max_distance:
-            artisan_data = {
-                **artisan,
-                "id": str(artisan["_id"]),
-                "distance": distance
-            }
-            artisans_with_distance.append(artisan_data)
+        if user.location:
+            distance = calculate_distance(user.location, artisan_location)
+            if distance <= proximity:
+                artisan["distance"] = distance
+                filtered_artisans.append(artisan)
+        else:
+            artisan["distance"] = None
+            filtered_artisans.append(artisan)
 
-    # Sort artisans by closest distance and apply limit
-    sorted_artisans = sorted(artisans_with_distance, key=lambda x: x["distance"])
+    sorted_artisans = sorted(
+        filtered_artisans,
+        key=lambda x: sort_artisans_key(x, artisan_rating)
+    )
+
     return sorted_artisans[:limit]
 
 
