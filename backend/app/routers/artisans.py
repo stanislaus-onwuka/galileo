@@ -118,6 +118,7 @@ async def recommend_artisans(
 
     return recommended_artisans
 
+
 @router.get("/filter", response_model=List[ArtisanProfileResponse])
 async def filter_artisans(
     user: UserInDB = Depends(get_current_user),

@@ -4,7 +4,7 @@ from typing import Optional
 from bson import ObjectId
 from fastapi import File, UploadFile
 from models import Coordinates, RoleEnum, ServiceRequest
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 
 
 class BaseModelWithID(BaseModel):
@@ -86,7 +86,6 @@ class BaseProfileUpdate(BaseModel):
     firstName: Optional[str] = Field(None, min_length=3, max_length=50)
     lastName: Optional[str] = Field(None, min_length=3, max_length=50)
     username: Optional[str] = Field(None, min_length=3, max_length=50)
-    email: Optional[EmailStr] = None
     address: Optional[str] = None
     location: Optional[Coordinates] = Coordinates(
         latitude=6.5158, longitude=3.3898
@@ -98,6 +97,7 @@ class ArtisanProfileUpdate(BaseProfileUpdate):
     min_service_rate: Optional[int] = 0
     max_service_rate: Optional[int] = 0
     services: Optional[list[str]] = []
+    qualification_file: Optional[HttpUrl] = None
     business_name: Optional[str] = Field(None, min_length=3, max_length=100)
 
 

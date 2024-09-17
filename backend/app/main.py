@@ -1,11 +1,23 @@
+import os
+from cloudinary import config
+from dotenv import load_dotenv
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
-
-from routers import auth, customers, artisans, admins, suppliers, users
+from routers import admins, artisans, auth, customers, suppliers, users
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+load_dotenv()  # load environment variables
+
+# cloudinary config
+config(
+    cloud_name=os.getenv("CLOUD_NAME"),
+    api_key=os.getenv("CLOUD_API_KEY"),
+    api_secret=os.getenv("CLOUD_API_SECRET"),
+)
 
 # Configure CORS
 app.add_middleware(
