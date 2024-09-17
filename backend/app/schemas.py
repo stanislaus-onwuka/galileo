@@ -90,6 +90,7 @@ class BaseProfileUpdate(BaseModel):
     location: Optional[Coordinates] = Coordinates(
         latitude=6.5158, longitude=3.3898
     )
+    role: str
     phone_number: Optional[str] = None
 
 
