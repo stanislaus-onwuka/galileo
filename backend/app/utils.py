@@ -4,17 +4,18 @@ from datetime import datetime, timedelta, timezone
 
 import bcrypt
 from bson import ObjectId
+from cloudinary.uploader import upload
 from dotenv import load_dotenv
 from jose import JWTError, jwt
 from mailjet_rest import Client
 from pymongo.collection import Collection
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, UploadFile, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from database import (
-     admins_collection, artisans_collection, 
-     customers_collection, suppliers_collection
+    admins_collection, artisans_collection,
+    customers_collection, suppliers_collection
 )
 from models import Coordinates, RoleEnum, UserInDB
 
@@ -36,6 +37,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 # ============================
 # JWT Handling
 # ============================
+
+
 def decode_token(token: str):
     """Decode JWT token"""
     try:
@@ -46,6 +49,7 @@ def decode_token(token: str):
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
+
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     """Create a JWT access token with optional expiration time"""
@@ -187,7 +191,6 @@ async def send_email(recipient_email, subject, content):
     print(result.json())
 
 
-
 # ============================
 # Artisans
 # ============================
@@ -197,6 +200,7 @@ async def get_cached_recommendations(user: UserInDB, limit: int) -> list[dict]:
     if user.recommended_artisans and (datetime.now(timezone.utc) - last_rec_update) < timedelta(hours=24):
         return user.recommended_artisans[:limit]
     return []
+
 
 async def generate_recommendations(user: UserInDB, max_distance: float, limit: int) -> list[dict]:
     """Generate new recommendations based on user location and max distance."""
@@ -220,6 +224,7 @@ async def generate_recommendations(user: UserInDB, max_distance: float, limit: i
     sorted_artisans = sorted(artisans_with_distance, key=lambda x: sort_artisans_key(x))
     return sorted_artisans[:limit]
 
+
 async def update_user_recommendations(user: UserInDB, recommendations: list[dict]):
     """Update user's cached recommendations."""
     users_collection = get_collection_by_role(user.role)
@@ -233,10 +238,10 @@ async def update_user_recommendations(user: UserInDB, recommendations: list[dict
         }
     )
 
+
 # ============================
 # Others
 # ============================
-
 def calculate_distance(coord1: Coordinates, coord2: Coordinates) -> float:
     """
     Calculate the great-circle distance between two points on Earth.
@@ -251,6 +256,7 @@ def calculate_distance(coord1: Coordinates, coord2: Coordinates) -> float:
         math.cos(lat2) * math.sin(dlon/2)**2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     return R * c
+
 
 def sort_artisans_key(artisan: dict, target_rating: float = None) -> tuple:
     """
@@ -268,3 +274,8 @@ def sort_artisans_key(artisan: dict, target_rating: float = None) -> tuple:
     # Sort by proximity to target rating
     rating_diff = abs(rating - target_rating)
     return (distance, rating_diff)
+
+
+async def upload_to_cloudinary(file: UploadFile) -> str:
+    result = upload(file.file, folder="qualifications")
+    return result["secure_url"]
