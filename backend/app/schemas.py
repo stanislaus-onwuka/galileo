@@ -56,6 +56,7 @@ class ArtisanProfileResponse(BaseProfileResponse):
     min_service_rate: Optional[int] = 0
     max_service_rate: Optional[int] = 0
     business_name: Optional[str] = None
+    qualification_file: HttpUrl = None
 
 
 # ================================
