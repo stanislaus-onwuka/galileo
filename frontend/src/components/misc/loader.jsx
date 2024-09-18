@@ -1,9 +1,11 @@
+/* eslint-disable react/prop-types */
+import { multipleClasses } from "../../../utils/functions"
 
-function Loader() {
+function Loader({ containerClass }) {
 	return (
 		<svg
 			aria-hidden="true"
-			className="w-8 h-8 text-gray-200 animate-spin dark:text-orange fill-background"
+			className={ multipleClasses("text-gray-200 animate-spin dark:text-orange fill-background", containerClass)}
 			viewBox="0 0 100 101"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"

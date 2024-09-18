@@ -31,6 +31,8 @@ import SupplierWallet from "./pages/supplier/wallet";
 
 const AppRoutes = () => {
     const { user } = useAuth();
+    
+    const currentUserRole = localStorage.getItem('role')
 
     return (
         <Routes>
@@ -39,7 +41,7 @@ const AppRoutes = () => {
             {user && (
                 <>
                     <Route element={<ProtectedRoute allowedRoles={userRoles} />}>
-                        {user.role === userTypes.CUSTOMER && (
+                        {currentUserRole === userTypes.CUSTOMER && (
                             <>
                                 <Route path="/" element={<Customer />} />
                                 <Route path="/:artisanId" element={<ViewArtisan />} />
@@ -47,7 +49,7 @@ const AppRoutes = () => {
                                 <Route path="/wallet" element={<CustomerWallet />} />
                             </>
                         )}
-                        {user.role === userTypes.ADMIN && (
+                        {currentUserRole === userTypes.ADMIN && (
                             <>
                                 <Route path="/" element={<Navigate to="/admin" />} />
                                 <Route path="/admin" element={<Sidebar />}>
@@ -59,7 +61,7 @@ const AppRoutes = () => {
                                 </Route>
                             </>
                         )}
-                        {user.role === userTypes.ARTISAN && (
+                        {currentUserRole === userTypes.ARTISAN && (
                             <>
                                 <Route path="/" element={<ArtisanDashboard />} />
                                 <Route path="/wallet" element={<ArtisanWallet />} />
@@ -68,7 +70,7 @@ const AppRoutes = () => {
                                 <Route path="/inventory" element={<ArtisanInventory />} />
                             </>
                         )}
-                        {user.role === userTypes.SUPPLIER && (
+                        {currentUserRole === userTypes.SUPPLIER && (
                             <>
                                 <Route path="/" element={<SupplierDashboard />} />
                                 <Route path="/wallet" element={<SupplierWallet />} />

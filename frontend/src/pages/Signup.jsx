@@ -118,7 +118,7 @@ const Signup = () => {
 							<button className="mb-6" onClick={() => setStep(1)}>
 								{"<"} Back
 							</button>
-							<div className="flex justify-between gap-2 px-4 py-[15.5px] rounded-lg border border-[#EAECF0] mb-1">
+							<div className="flex justify-between gap-2 rounded-lg border border-[#EAECF0] mb-1">
 								<input
 									type={showPassword ? "text" : "password"}
 									name="password"
@@ -126,17 +126,25 @@ const Signup = () => {
 									onChange={handleChange}
 									placeholder="Password"
 									required
-									className="w-full"
+									className="w-full px-4 py-[15.5px]"
 								/>
-								<button onClick={() => setShowPassword(!showPassword)}>
+								<button onClick={() => setShowPassword(!showPassword)} className="pr-4">
 									{showPassword ? (
-										<img src="/assets/svgs/customer/hide.svg" alt="Hide Password" />
+										<img
+											src="/assets/svgs/customer/hide.svg"
+											className="w-6 h-6"
+											alt="Hide Password"
+										/>
 									) : (
-										<img src="/assets/svgs/customer/show.svg" alt="Show Password" />
+										<img
+											src="/assets/svgs/customer/show.svg"
+											className="w-6 h-6"
+											alt="Show Password"
+										/>
 									)}
 								</button>
-							</div>
-							<div className="flex justify-between gap-2 px-4 py-[15.5px] rounded-lg border border-[#EAECF0]">
+                            </div>
+                            <div className="flex justify-between gap-2 rounded-lg border border-[#EAECF0] mb-1">
 								<input
 									type={showConfirmPassword ? "text" : "password"}
 									name="confirmPassword"
@@ -144,13 +152,21 @@ const Signup = () => {
 									onChange={handleChange}
 									placeholder="Confirm Password"
 									required
-									className="w-full"
+									className="w-full px-4 py-[15.5px]"
 								/>
-								<button onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+								<button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="pr-4">
 									{showConfirmPassword ? (
-										<img src="/assets/svgs/customer/hide.svg" alt="Hide Password" />
+										<img
+											src="/assets/svgs/customer/hide.svg"
+											className="w-6 h-6"
+											alt="Hide Password"
+										/>
 									) : (
-										<img src="/assets/svgs/customer/show.svg" alt="Show Password" />
+										<img
+											src="/assets/svgs/customer/show.svg"
+											className="w-6 h-6"
+											alt="Show Password"
+										/>
 									)}
 								</button>
 							</div>

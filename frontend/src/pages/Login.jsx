@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import Loader from "../components/misc/loader";
 
 const Login = () => {
+	const [showPassword, setShowPassword] = useState(false);
 	const navigate = useNavigate();
 	const { login } = useAuth();
 
@@ -52,7 +53,12 @@ const Login = () => {
 				},
 			}
 		);
-	};
+    };
+    
+    const togglePassword = (e) => {
+        e.preventDefault()
+        setShowPassword(!showPassword)
+    }
 
 	return (
 		<AuthLayout>
@@ -74,18 +80,27 @@ const Login = () => {
 						required
 						className="px-4 py-[15.5px] rounded-lg border border-[#EAECF0]"
 					/>
-					<input
-						type="password"
-						name="password"
-						value={formData.password}
-						onChange={handleChange}
-						placeholder="Password"
-						required
-						className="px-4 py-[15.5px] rounded-lg border border-[#EAECF0]"
-					/>
+					<div className="flex justify-between gap-2 rounded-lg border border-[#EAECF0] mb-1">
+						<input
+							type={showPassword ? "text" : "password"}
+							name="password"
+							value={formData.password}
+							onChange={handleChange}
+							placeholder="Password"
+							required
+							className="w-full px-4 py-[15.5px]"
+						/>
+						<button onClick={togglePassword} className="pr-4">
+							{showPassword ? (
+								<img src="/assets/svgs/customer/hide.svg" className="w-6 h-6" alt="Hide Password" />
+							) : (
+								<img src="/assets/svgs/customer/show.svg" className="w-6 h-6" alt="Show Password" />
+							)}
+						</button>
+					</div>
 					{loginUser.isPending ? (
 						<div className="mx-auto mt-4">
-							<Loader />
+							<Loader containerClass="w-8 h-8" />
 						</div>
 					) : (
 						<button

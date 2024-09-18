@@ -4,12 +4,17 @@ import { useAuth } from "../../context/authContext";
 
 const ProtectedRoute = ({ allowedRoles }) => {
     const { user } = useAuth();
+    const currentUserRole = localStorage.getItem('role')
 
     if (!user) {
         return <Navigate to="/login" />;
     }
 
-    if (!allowedRoles.includes(user.role)) {
+    // if (!allowedRoles.includes(user.role)) {
+    //     return <Navigate to="/error" />;
+    // }
+
+    if (!allowedRoles.includes(currentUserRole)) {
         return <Navigate to="/error" />;
     }
 

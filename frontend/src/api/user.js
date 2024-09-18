@@ -10,8 +10,18 @@ const updateProfile = async (details) => {
     }
 }
 
+const fetchUserProfile = async () => {
+    try {
+        const response = await makeApiRequest.get('/users/profile')
+        return response.data
+    } catch (error) {
+        processError(error)
+    }
+}
+
 const userApi = { 
-    updateProfile
+    updateProfile,
+    fetchUserProfile
 }
 
 export default userApi

@@ -7,7 +7,7 @@ export const makeApiRequest = axios.create({
 })
 
 makeApiRequest.interceptors.request.use((config) => {
-    const accessToken = JSON.parse(localStorage.getItem("access_token"))
+    const accessToken = localStorage.getItem("access_token")
     config.headers['Authorization'] = `Bearer ${accessToken}`
     config.headers['Content-Type'] = "application/json"
     
