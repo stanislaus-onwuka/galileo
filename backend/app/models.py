@@ -48,6 +48,7 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str = None
+    qualification_file: str = None
     recommended_artisans: list = []
     last_recommendation_update: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
