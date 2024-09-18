@@ -1,8 +1,8 @@
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from typing import List, Optional
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from models import RoleEnum, UserInDB
-from schemas import ArtisanProfileResponse, BaseProfileResponse, BaseProfileUpdate, SupplierProfileUpdate
+from schemas import ArtisanProfileResponse, BaseProfileResponse
 from utils import get_collection_by_role, get_current_user, upload_to_cloudinary
 
 router = APIRouter()
@@ -15,25 +15,27 @@ def get_response_class(user_role):
 
 @router.patch("/profile/update")
 async def profile(
-    firstName: str,
-    lastName: str,
-    address: str,
-    phone_number: str,
-    services: list = None,
-    business_name: str = None,
-    min_service_rate: int = None,
-    max_service_rate: int = None,
-    qualification_file: UploadFile = None,
+    address: str = Form(...),
+    lastName: str = Form(...),
+    firstName: str = Form(...),
+    phone_number: str = Form(...),
+
+    business_name: Optional[str] = Form(None),
+    services: Optional[List[str]] = Form(None),
+    qualification_file: UploadFile = File(None),
+    min_service_rate: Optional[int] = Form(None),
+    max_service_rate: Optional[int] = Form(None),
+
     user: UserInDB = Depends(get_current_user),
 ):
-    # Check for privileged users and validate mandatory fields
+    # validate mandatory fields for artisans and suppliers
     if user.role in [RoleEnum.artisan, RoleEnum.supplier]:
         if not business_name:
-            raise HTTPException(status_code=400, detail="Business name is required")
+            raise HTTPException(status_code=400, detail="Business name is required.")
         if not services:
-            raise HTTPException(status_code=400, detail="Services are required")
+            raise HTTPException(status_code=400, detail="Services are required.")
         if min_service_rate is None or max_service_rate is None:
-            raise HTTPException(status_code=400, detail="Service rates are required")
+            raise HTTPException(status_code=400, detail="Service rates are required.")
 
     if user.role == RoleEnum.artisan and not user.qualification_file and not qualification_file:
         raise HTTPException(status_code=400, detail="Qualification file is required.")
@@ -45,7 +47,7 @@ async def profile(
         "phone_number": phone_number,
         "min_service_rate": min_service_rate,
         "max_service_rate": max_service_rate,
-        "services": services,
+        "services": services or [],
         "business_name": business_name
     }
     update_data = {k: v for k, v in update_data.items() if v is not None}
@@ -67,7 +69,7 @@ async def profile(
 
 
 @router.get("/profile")
-async def profile(
+async def update_profile(
     user: UserInDB = Depends(get_current_user),
 ):
     profile_class = get_response_class(user.role)
