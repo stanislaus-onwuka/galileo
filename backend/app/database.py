@@ -1,8 +1,13 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+import os
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 MONGO_DETAILS = "mongodb://localhost:27017"
 
-MONGO_URI = "mongodb+srv://stanstyler25:HXrD0dmHQLcxoigh@cluster0.3xr8e3c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI = os.getenv("MONGO_URI")
 
 client = AsyncIOMotorClient(MONGO_DETAILS)
 database = client.get_database('galileo')
