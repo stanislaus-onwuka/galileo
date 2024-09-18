@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { FiMenu, FiX } from "react-icons/fi"; // Import menu icons from react-icons
-import { NavLink } from "react-router-dom";
+import { CgProfile } from "react-icons/cg";
+import { FiMenu, FiX } from "react-icons/fi";
+import { NavLink, } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,15 +57,9 @@ const Navbar = () => {
               isOpen ? "hidden" : "hidden"
             } lg:flex items-center justify-center space-x-6 mt-4 lg:mt-0`}
           >
-            <div className="flex items-center space-x-3">
-              <i className="fas fa-search cursor-pointer hover:text-gray-400"></i>
-              <i className="fas fa-bell cursor-pointer hover:text-gray-400"></i>
-              <img
-                src="https://via.placeholder.com/30"
-                alt="User Avatar"
-                className="w-8 h-8 rounded-full"
-              />
-            </div>
+            <NavLink to="/profile" className="flex items-center space-x-3">
+              <CgProfile size={36}/>
+            </NavLink>
           </div>
         </div>
       </div>

@@ -1,15 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import MainLayout from "../../../components/layouts/main-layout";
-import { useAuth } from "../../../context/authContext";
+import { useAuth } from "../../context/authContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import userApi from "../../../api/user";
+import userApi from "../../api/user";
 import toast from "react-hot-toast";
-import Loader from "../../../components/misc/loader";
+import Loader from "../../components/misc/loader";
+import ArtisanLayout from "../../components/layouts/artisan-layout";
 
-function CustomerProfile() {
+function ArtisanProfile() {
 	const queryClient = useQueryClient();
-	const { user } = useAuth();
+	const { user, logout } = useAuth();
 	const { firstName, lastName, address, phone_number, location } = user.user;
 
 	const [userDetails, setUserDetails] = useState({
@@ -17,10 +16,9 @@ function CustomerProfile() {
 		lastName,
 		address,
 		phone_number,
-		location,
+		location
 	});
 
-	console.log(userDetails);
 
 	const handleChange = (e) => {
 		setUserDetails({
@@ -52,19 +50,20 @@ function CustomerProfile() {
 	};
 
 	return (
-		<MainLayout>
+		<ArtisanLayout>
 			<main className="w-[60%] mx-auto">
-				<div className="flex justify-between items-center mb-8">
-					<Link to="/">{"<"} Back to homepage</Link>
-					<div className="flex gap-9">
-						<Link to="/profile">Profile</Link>
-						<Link to="/wallet">Wallet</Link>
-					</div>
-				</div>
 				<section className="flex flex-col">
-					<h1 className="text-[39px] leading-[120%] mb-[60px]">My Profile</h1>
+					<div className="flex justify-between items-center mb-[60px]">
+						<h1 className="text-[39px] leading-[120%]">Profile</h1>
+						<button
+							onClick={logout}
+							className="text-red-500 py-[10px] px-8 duration-100 "
+						>
+							Logout
+						</button>
+					</div>
 					<div className="py-6 px-4 border border-neutral-40 rounded-xl">
-						<h2 className="text-[32px] leading-10 mb-[18px]">Personal Information</h2>
+						<h2 className="text-[32px] leading-10 mb-[18px]">Artisan Information</h2>
 						<div>
 							<div className="flex justify-between gap-[58px] mb-[18px]">
 								<div className="flex flex-col w-full">
@@ -146,8 +145,8 @@ function CustomerProfile() {
 					</div>
 				</section>
 			</main>
-		</MainLayout>
+		</ArtisanLayout>
 	);
 }
 
-export default CustomerProfile;
+export default ArtisanProfile;

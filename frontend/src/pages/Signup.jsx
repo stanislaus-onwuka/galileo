@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "../components/layouts/auth-layout";
 import { useMutation } from "@tanstack/react-query";
 import authApi from "../api/auth";
-import { useAuth } from "../context/authContext";
 import toast from "react-hot-toast";
 import Loader from "../components/misc/loader";
 
@@ -11,7 +10,6 @@ const Signup = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [step, setStep] = useState(1);
-	const { login } = useAuth();
 
 	const navigate = useNavigate();
 
@@ -32,6 +30,16 @@ const Signup = () => {
 		});
 	};
 
+	const togglePassword = (e) => {
+		e.preventDefault();
+		setShowPassword(!showPassword);
+	};
+
+	const toggleConfirmPassword = (e) => {
+		e.preventDefault();
+		setShowConfirmPassword(!showConfirmPassword);
+	};
+
 	const registerUser = useMutation({
 		mutationFn: (data) => {
 			return authApi.registerUser(data);
@@ -42,9 +50,9 @@ const Signup = () => {
 		e.preventDefault();
 
 		registerUser.mutate(formData, {
-			onSuccess(data) {
-				login(data);
-				navigate("/");
+			onSuccess() {
+				toast.success("Sign up successful, please log in");
+				navigate("/login");
 			},
 			onError(error) {
 				toast.error(error.message);
@@ -55,16 +63,15 @@ const Signup = () => {
 	return (
 		<AuthLayout>
 			<>
-				<div className="flex flex-col items-center mb-[60px]">
-					<div className="mb-10">
+				<div className="flex flex-col items-center mb-10">
+					<div className="mb-8">
 						<img src="/assets/svgs/customer/company-logo.svg" alt="Logo" />
 					</div>
 					<h3 className="text-[32px] leading-[120%] font-bold">
 						Welcome to <span className="text-default">Galileo</span>
 					</h3>
 				</div>
-
-				<form className="flex flex-col gap-4 p-8 w-[80%]">
+				<form onSubmit={handleSubmit} className="flex flex-col gap-4 p-8 w-[80%]">
 					{step === 1 ? (
 						<div className="flex flex-col w-full gap-1">
 							<input
@@ -110,6 +117,12 @@ const Signup = () => {
 							>
 								Continue
 							</button>
+							<h3 className="text-center">
+								Already have an account?{" "}
+								<Link to="/login" className="underline hover:no-underline">
+									Login
+								</Link>{" "}
+							</h3>
 						</div>
 					) : null}
 
@@ -128,7 +141,7 @@ const Signup = () => {
 									required
 									className="w-full px-4 py-[15.5px]"
 								/>
-								<button onClick={() => setShowPassword(!showPassword)} className="pr-4">
+								<button onClick={togglePassword} className="pr-4">
 									{showPassword ? (
 										<img
 											src="/assets/svgs/customer/hide.svg"
@@ -143,8 +156,8 @@ const Signup = () => {
 										/>
 									)}
 								</button>
-                            </div>
-                            <div className="flex justify-between gap-2 rounded-lg border border-[#EAECF0] mb-1">
+							</div>
+							<div className="flex justify-between gap-2 rounded-lg border border-[#EAECF0] mb-1">
 								<input
 									type={showConfirmPassword ? "text" : "password"}
 									name="confirmPassword"
@@ -154,7 +167,7 @@ const Signup = () => {
 									required
 									className="w-full px-4 py-[15.5px]"
 								/>
-								<button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="pr-4">
+								<button onClick={toggleConfirmPassword} className="pr-4">
 									{showConfirmPassword ? (
 										<img
 											src="/assets/svgs/customer/hide.svg"
@@ -198,15 +211,13 @@ const Signup = () => {
 							</select>
 
 							{registerUser.isPending ? (
-								<div className="mx-auto mt-4">
-									<Loader />
-								</div>
+								<Loader containerClass="w-8 h-8" />
 							) : (
 								<button
-									onClick={handleSubmit}
+									type="submit"
 									className="rounded py-3 text-base bg-default w-full font-bold mt-[26px] mb-7 text-white"
 								>
-									Login
+									Signup
 								</button>
 							)}
 						</div>

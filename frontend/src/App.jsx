@@ -28,6 +28,7 @@ import SupplierDashboard from "./pages/supplier";
 import SupplierInventory from "./pages/supplier/inventory";
 import SupplierQuotations from "./pages/supplier/quotations";
 import SupplierWallet from "./pages/supplier/wallet";
+import ArtisanProfile from "./pages/artisan/profile";
 
 const AppRoutes = () => {
     const { user } = useAuth();
@@ -64,6 +65,7 @@ const AppRoutes = () => {
                         {currentUserRole === userTypes.ARTISAN && (
                             <>
                                 <Route path="/" element={<ArtisanDashboard />} />
+                                <Route path="/profile" element={<ArtisanProfile />} />
                                 <Route path="/wallet" element={<ArtisanWallet />} />
                                 <Route path="/jobs" element={<ArtisanJobs />} />
                                 <Route path="/quotations" element={<ArtisanQuotations />} />

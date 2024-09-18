@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "../components/layouts/auth-layout";
 import { useMutation } from "@tanstack/react-query";
 import authApi from "../api/auth";
@@ -105,12 +105,14 @@ const Login = () => {
 					) : (
 						<button
 							onClick={handleSubmit}
-							className="rounded py-3 text-base bg-default w-full font-bold mt-[26px] mb-7 text-white"
+							className="rounded py-3 text-base bg-default w-full font-bold mt-[26px] text-white"
 						>
 							Login
 						</button>
 					)}
 				</form>
+
+				<h3 className="text-center mt-7">Don`t have an account? <Link to="/signup" className="underline hover:no-underline">Sign up</Link> </h3>
 			</>
 		</AuthLayout>
 	);

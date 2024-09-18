@@ -7,7 +7,7 @@ function ArtisanLayout({ children }) {
     const { pathname } = useLocation()
 
 	return (
-		<div className="bg-white">
+		<div className="bg-white pb-10">
 			<div className="bg-background">
 				<Navbar />
                 { pathname === "/" ? <DashboardHeader /> : null  }
