@@ -42,6 +42,7 @@ class BaseProfileResponse(BaseModelWithID):
     firstName: str
     lastName: str
     role: RoleEnum
+    email: EmailStr
     address: Optional[str] = None
     location: Coordinates = Coordinates(latitude=6.5158, longitude=3.3898)
     phone_number: Optional[str] = None
@@ -98,7 +99,6 @@ class ArtisanProfileUpdate(BaseProfileUpdate):
     min_service_rate: Optional[int] = 0
     max_service_rate: Optional[int] = 0
     services: Optional[list[str]] = []
-    qualification_file: Optional[HttpUrl] = None
     business_name: Optional[str] = Field(None, min_length=3, max_length=100)
 
 
