@@ -54,7 +54,7 @@ def decode_token(token: str):
 def create_access_token(data: dict, expires_delta: timedelta = None):
     """Create a JWT access token with optional expiration time"""
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=30))
     to_encode["exp"] = expire
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
