@@ -185,8 +185,11 @@ async def admin_respond_to_service_request(
                 f"Your service request for {service_request['service_type']} has been declined. Reason: {response.reason or 'Not provided'}"
             )
 
-        # Delete the service request
-        await service_requests_collection.delete_one({"_id": ObjectId(request_id)})
+        # Update the service request
+        await service_requests_collection.update_one(
+            {"_id": ObjectId(request_id)},
+            {"$set": {"status": "declined"}}
+        )
 
         raise HTTPException(
             status_code=200, detail="Service request declined and deleted")
