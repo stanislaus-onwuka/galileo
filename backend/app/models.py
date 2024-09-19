@@ -33,6 +33,7 @@ class Coordinates(BaseModel):
 
 
 class User(BaseModel):
+    id: str = Field(None, alias="_id")
     firstName: str = Field(..., min_length=3, max_length=50)
     lastName: str = Field(..., min_length=3, max_length=50)
     username: str = Field(..., min_length=3, max_length=50)
@@ -44,6 +45,13 @@ class User(BaseModel):
     location: Optional[Coordinates] = Coordinates(latitude=6.5158, longitude=3.3898)
     phone_number: Optional[str] = None
 
+    @validator('id', pre=True)
+    def objectid_to_str(cls, v):
+        return str(v) if isinstance(v, ObjectId) else v
+
+    class Config:
+        allow_population_by_field_name = True
+        json_encoders = {ObjectId: str}
 
 
 class UserInDB(User):

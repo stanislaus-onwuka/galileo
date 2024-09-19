@@ -5,7 +5,7 @@ from typing import List
 from bson import ObjectId
 from dotenv import load_dotenv
 
-from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, Form, HTTPException, Path, BackgroundTasks, Query
 
 from database import artisans_collection, jobs_collection, service_requests_collection
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
@@ -85,6 +85,15 @@ async def request_service(
     # Send email notification to admin
     background_tasks.add_task(send_email, ADMIN_EMAIL, subject, content)
     return await service_requests_collection.find_one({"_id": new_req.inserted_id})
+
+
+@router.get("/requests", response_model=list[ServiceRequestResponse])
+async def list_pending_service_requests(
+    user: UserInDB = Depends(require_roles([RoleEnum.artisan]))
+):
+    return await service_requests_collection.find(
+        {"status": {"$ne": "accepted"}, "client_id": user.id},
+    ).to_list(length=None)
 
 
 @router.get("/jobs", response_model=list[Job])
