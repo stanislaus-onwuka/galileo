@@ -106,7 +106,9 @@ def get_password_hash(password: str) -> str:
 # ============================
 def get_collection_by_role(role: RoleEnum) -> Collection:
     """Get the appropriate collection based on the user's role"""
-    if role == RoleEnum.customer:
+    if role == RoleEnum.admin:
+        return admins_collection
+    elif role == RoleEnum.customer:
         return customers_collection
     elif role == RoleEnum.artisan:
         return artisans_collection
