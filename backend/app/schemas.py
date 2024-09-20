@@ -69,14 +69,8 @@ class ArtisanRating(BaseModel):
 class ServiceRequestResponse(BaseModelWithID, ServiceRequest):
     client_id: str
     artisan_id: str
+    status: str = "pending"
     date_time: datetime
-
-
-class AllServiceRequestsResponse(BaseModel):
-    pending: List[ServiceRequestResponse]
-    accepted: List[ServiceRequestResponse]
-    declined: List[ServiceRequestResponse]
-
 
 # ================================
 # Admin Actions
