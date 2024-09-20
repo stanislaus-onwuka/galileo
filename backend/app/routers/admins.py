@@ -10,7 +10,6 @@ from database import (
 from models import Job, RoleEnum, UserInDB
 from schemas import (
     AdminResponse,
-    AllServiceRequestsResponse,
     ArtisanProfileResponse, AdminArtisanProfileUpdate,
     BaseProfileResponse, ServiceRequestResponse
 )
