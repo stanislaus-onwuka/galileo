@@ -1,18 +1,20 @@
 /* eslint-disable react/prop-types */
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "../../context/auth-context";
+import UpdateProfileBanner from "../update-profile-banner";
 
 function MainLayout({ children }) {
-    const { logout } = useAuth()
-    const location = useLocation()
+	const { user, logout } = useAuth();
+	const location = useLocation();
 	const onProfilePage = location.pathname === "/profile";
 
 	return (
 		<div>
+            {!user.user?.address ? <UpdateProfileBanner/> : null}
 			<nav className="flex justify-between items-center py-[22px] px-4">
-				<div>
+				<Link to="/">
 					<img src="/assets/svgs/customer/company-logo.svg" alt="Logo" />
-				</div>
+				</Link>
 				<div>
 					{onProfilePage ? (
 						<button

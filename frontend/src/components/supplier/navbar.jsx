@@ -34,8 +34,8 @@ const Navbar = () => {
 					<NavLink to="/inventory">
 						<li className="hover:text-gray-400 cursor-pointer">Inventory</li>
 					</NavLink>
-					<NavLink to="/wallet">
-						<li className="hover:text-gray-400 cursor-pointer">Wallet</li>
+					<NavLink to="/profile">
+						<li className="hover:text-gray-400 cursor-pointer">Profile</li>
 					</NavLink>
 				</ul>
 				<div className="lg:hidden">

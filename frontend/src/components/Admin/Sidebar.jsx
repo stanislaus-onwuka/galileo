@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { IoChevronBackOutline, IoChevronForwardOutline, IoPeopleOutline } from "react-icons/io5";
 import { VscTools } from "react-icons/vsc";
-import { BsPeople, BsTruck } from "react-icons/bs";
+import { BsTruck } from "react-icons/bs";
 import { FiHome } from "react-icons/fi";
 import { PiNotepad } from "react-icons/pi";
 import { TbLogout2 } from "react-icons/tb";
 import { Outlet, NavLink } from "react-router-dom";
 import { multipleClasses } from "../../../utils/functions";
+import { useAuth } from "../../context/auth-context";
 
 const Sidebar = () => {
     const [isMinimized, setIsMinimized] = useState(false);
+    const { logout } = useAuth()
 
     const toggleSidebar = () => {
         setIsMinimized(!isMinimized);
@@ -78,17 +80,17 @@ const Sidebar = () => {
                                 {!isMinimized && <span className="text-lg">Suppliers</span>}
                             </NavLink>
                         </li>
-                        <li>
+                        {/* <li>
                             <a href="#" className="items-center space-x-4 p-2 rounded hidden hover:bg-gray-700">
                                 <BsPeople size={24} />
                                 {!isMinimized && <span className="text-lg">Team Management</span>}
                             </a>
-                        </li>
+                        </li> */}
                         <li>
-                            <a href="#" className="flex items-center space-x-4 p-2 rounded hover:bg-gray-700">
+                            <button onClick={logout} className="flex items-center space-x-4 p-2 rounded hover:bg-gray-700">
                                 <TbLogout2 size={24} />
                                 {!isMinimized && <span className="text-lg">Logout</span>}
-                            </a>
+                            </button>
                         </li>
                     </ul>
                 </nav>

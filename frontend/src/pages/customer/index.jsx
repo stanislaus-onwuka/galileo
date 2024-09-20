@@ -4,20 +4,62 @@ import SearchResults from "../../components/customer/search-results";
 import MainLayout from "../../components/layouts/main-layout";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import artisanApi from "../../api/artisans";
+import artisanApi from "../../api/artisan";
+import Loader from "../../components/misc/loader";
+import ArtisanRecommendedList from "../../components/customer/artisan-recommended-list";
 
 function Customer() {
 	const [showSearchResults, setShowSearchResults] = useState(false);
 
-    const artisansList = ["Painters", "Carpenters", "Bricklayers", "Tailor", "Mechanic"];
-    
+	const artisansList = ["Painters", "Carpenters", "Bricklayers", "Tailor", "Mechanic"];
+
 	const getRecommendedArtisans = useQuery({
 		queryKey: ["artisans"],
-		queryFn: () => artisanApi.recommendArtisans({ limit:10, max_distance: 50 }),
+		queryFn: () => artisanApi.recommendArtisans({ limit: 15, max_distance: 50.0 }),
 		enabled: true,
-    });
+	});
 
-    console.log(getRecommendedArtisans.data)
+
+	const renderRecommendedArtisans = () => {
+		const { isLoading, isError, error, refetch, isSuccess, data } = getRecommendedArtisans;
+
+		if (isLoading) {
+			return (
+				<div className="w-full h-full flex items-center justify-center py-6">
+					<Loader containerClass="w-14 h-14" />
+				</div>
+			);
+		}
+
+		if (isError) {
+			return (
+				<div className="w-full h-full flex items-center text-center justify-center py-6">
+					<h3>An error occured</h3>
+					<p className="my-3">{error.message}</p>
+					<button onClick={refetch} className="border border-default mt-3 rounded-full py-2 px-5">
+						Reload
+					</button>
+				</div>
+			);
+		}
+
+		if (isSuccess && data.length === 0) {
+			return (
+				<div className="w-full h-full flex items-center text-center justify-center py-6">
+					<h3>Update your profile information to get recommendations</h3>
+					<Link to="/profile" className="border border-default mt-3 rounded-full py-2 px-5">
+						Go to profile
+					</Link>
+				</div>
+			);
+		}
+
+		if (isSuccess && data.length > 0) {
+			return (
+				<ArtisanRecommendedList data={data}/>
+			);
+		}
+	};
 
 	return (
 		<MainLayout>
@@ -50,7 +92,7 @@ function Customer() {
 								</button>
 							</div>
 						</div>
-						<div className="mt-6 flex flex-wrap justify-center gap-2 max-w-[620px]">
+						<div className="mt-6 flex flex-wrap justify-center gap-2 max-w-[650px]">
 							{artisansList.map((artisan, idx) => {
 								return (
 									<button
@@ -70,51 +112,15 @@ function Customer() {
 				<section className="mt-[214px] px-[8%]">
 					<div className="mb-10">
 						<h2 className="text-[32px] leading-[120%] mb-4">Explore</h2>
-						<div>
+						{/* <div>
 							<div className="flex gap-2">
 								<button className="bg-neutral-20 px-4 py-1 rounded-full">Discover</button>
 								<button>Featured</button>
 							</div>
 							<div></div>
-						</div>
+						</div> */}
 					</div>
-					<div>
-						<Link to="/1" className="max-w-[285px]">
-							<div className="max-w-[285px]">
-								<div className="mb-6">
-									<img src="/assets/imgs/artisan.png" className="rounded-2xl" alt="Service image" />
-								</div>
-								<div>
-									<div className="flex items-center justify-between">
-										<div className="flex gap-2">
-											<h3 className="font-semibold">Stitches n Seams</h3>
-											<span className="bg-neutral-10 rounded-full py-1 px-2 text-neutral-60 border border-neutral-20 font-bold text-[13px] leading-[120%]">
-												Tailor
-											</span>
-										</div>
-										<div>
-											<img src="/assets/svgs/customer/arrow-up-right.svg" alt="Redirect" />
-										</div>
-									</div>
-									<div className="flex gap-2 mt-[9px]">
-										<div className="flex gap-[6px] items-center">
-											<span>
-												<img src="/assets/svgs/customer/star.svg" alt="Rating" />
-											</span>
-											<span>4.1</span>
-											<span className="text-neutral-40">(38)</span>
-										</div>
-										<div className="flex gap-[6px] items-center">
-											<span>
-												<img src="/assets/svgs/customer/location.svg" alt="Distance" />
-											</span>
-											<span>4.1km</span>
-										</div>
-									</div>
-								</div>
-							</div>
-						</Link>
-					</div>
+					<div>{renderRecommendedArtisans()}</div>
 				</section>
 			</main>
 			<UpdateProfile />

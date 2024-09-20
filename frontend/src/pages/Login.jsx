@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "../components/layouts/auth-layout";
 import { useMutation } from "@tanstack/react-query";
 import authApi from "../api/auth";
-import { useAuth } from "../context/authContext";
+import { useAuth } from "../context/auth-context";
 import toast from "react-hot-toast";
 import Loader from "../components/misc/loader";
 
@@ -53,12 +53,12 @@ const Login = () => {
 				},
 			}
 		);
-    };
-    
-    const togglePassword = (e) => {
-        e.preventDefault()
-        setShowPassword(!showPassword)
-    }
+	};
+
+	const togglePassword = (e) => {
+		e.preventDefault();
+		setShowPassword(!showPassword);
+	};
 
 	return (
 		<AuthLayout>
@@ -112,7 +112,12 @@ const Login = () => {
 					)}
 				</form>
 
-				<h3 className="text-center mt-7">Don`t have an account? <Link to="/signup" className="underline hover:no-underline">Sign up</Link> </h3>
+				<h3 className="text-center mt-7">
+					Don`t have an account?{" "}
+					<Link to="/signup" className="underline hover:no-underline">
+						Sign up
+					</Link>{" "}
+				</h3>
 			</>
 		</AuthLayout>
 	);

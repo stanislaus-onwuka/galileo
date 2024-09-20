@@ -7,7 +7,7 @@ const StatsCard = ({ label, value, growth }) => {
 				return "/assets/svgs/artisan/avg_rating.svg";
 			case "Completed Jobs":
 				return "/assets/svgs/artisan/jobs.svg";
-			case "Active Quotes":
+			case "Rating Count":
 				return "/assets/svgs/artisan/quotes.svg";
 			default:
 				return null;

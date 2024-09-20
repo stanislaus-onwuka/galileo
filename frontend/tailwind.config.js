@@ -39,7 +39,10 @@ export default {
         'level-2': '0 4px 6px -2px rgba(0, 0, 0, 0.3)',
         'level-3': '0 8px 8px -4px rgba(0, 0, 0, 0.3)',
         'level-4': '0 24px 48px -12px rgba(0, 0, 0, 0.3)',
-      }
+      },
+      gridTemplateColumns: {
+        "recommendation-grid": "repeat(auto-fit, minmax(240px, 1fr))",
+      },
     },
   },
   plugins: [],
