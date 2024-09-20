@@ -1,8 +1,10 @@
+from bson import ObjectId
 from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from database import transactions_collection
 from models import RoleEnum, UserInDB
-from schemas import ArtisanProfileResponse, BaseProfileResponse
+from schemas import ArtisanProfileResponse, BaseProfileResponse, WalletResponse
 from utils import get_collection_by_role, get_current_user, upload_to_cloudinary
 
 router = APIRouter()
@@ -81,3 +83,26 @@ async def update_profile(
     user_data = await collection.find_one({"email": user.email})
 
     return profile_class(**user_data)
+
+
+@router.get('/wallet', response_model=WalletResponse)
+async def wallet(user: UserInDB = Depends(get_current_user)):
+    collection = get_collection_by_role(user.role)
+    user_data = await collection.find_one({"_id": ObjectId(user.id)})
+    user_id = ObjectId(user.id)
+
+    # Fetch and format user transactions, including artisan info.
+    # Match by user_id, lookup artisan details, add action and name fields, then sort by date.
+    transactions_pipeline = [
+    {"$match": {"$or": [{"client_id": user_id}, {"artisan_id": user_id}]}},
+    {"$lookup": {"from": "artisans", "localField": "artisan_id", "foreignField": "_id", "as": "a"}},
+    {"$addFields": {"action": {"$cond": [{"$eq": ["$artisan_id", user_id]}, "credited", "debited"]}, 
+                    "artisan_name": {"$cond": [{"$eq": ["$artisan_id", user_id]}, "Self", 
+                    {"$ifNull": [{"$arrayElemAt": ["$a.business_name", 0]}, 
+                    {"$concat": [{"$arrayElemAt": ["$a.firstName", 0]}, " ", {"$arrayElemAt": ["$a.lastName", 0]}]}]}]}}},
+    {"$sort": {"paid_at": -1}}
+]
+
+    transactions = await transactions_collection.aggregate(transactions_pipeline).to_list(None)
+
+    return {"balance": user_data.get("balance", 0), "transactions": transactions}
