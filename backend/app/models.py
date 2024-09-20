@@ -87,3 +87,19 @@ class Job(BaseModel):
     description: Optional[str] = None
     status: JobStatus = JobStatus.pending
     date_time: datetime = Field(datetime.now(timezone.utc))
+
+
+class Transaction(BaseModel):
+    job_id: ObjectId
+    client_id: ObjectId
+    artisan_id: ObjectId
+    service_requested: str
+    paid_amount: float
+    success: bool = False
+    action: str = "credited"
+    paid_at: Optional[datetime] = None
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}

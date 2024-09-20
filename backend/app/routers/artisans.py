@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks, Qu
 
 from services import PayStackSerivce
 from database import artisans_collection, jobs_collection, service_requests_collection, transactions_collection
-from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
+from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, Transaction, UserInDB
 from utils import (calculate_distance, generate_recommendations, get_cached_recommendations, get_current_user, get_user,
                    require_roles, send_email, sort_artisans_key, update_user_recommendations, verify_webhook_origin)
 from schemas import ArtisanProfileResponse, ArtisanRating, PaystackWebhookPayload, ServiceRequestResponse
@@ -230,19 +230,30 @@ async def paystack_webhook(request: Request, payload: PaystackWebhookPayload):
     # if verify_webhook_origin(request):
     payment_data = payload.data
     job_id = payment_data.get("metadata", {}).get("job_id")
+
     # handle successful service payment
     if payload.event in ["charge.success", "transfer.success"]:
         paid_amount = payment_data.get("amount")
+        paid_at = datetime.fromisoformat(payment_data.get("paidAt").rstrip("Z"))
+
+        # Get job details
+        job = await jobs_collection.find_one({"_id": ObjectId(job_id)})
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        # Create transaction
+        transaction = Transaction(
+            job_id=ObjectId(job_id),
+            client_id=ObjectId(job["client_id"]),
+            artisan_id=ObjectId(job["artisan_id"]),
+            service_requested=job["service_type"],
+            paid_amount=paid_amount,
+            success=True,
+            paid_at=paid_at
+        )
 
         # save transaction to database
-        await transactions_collection.insert_one(
-            {
-                "success": True,
-                "job_id": job_id,
-                "paid_amount": paid_amount,
-                "paid_at": payment_data.get("paidAt"),
-            }
-        )
+        await transactions_collection.insert_one(transaction.model_dump(by_alias=True))
 
         # mark job status as paid
         await jobs_collection.update_one(
@@ -251,17 +262,22 @@ async def paystack_webhook(request: Request, payload: PaystackWebhookPayload):
         )
 
         # update artisan balance
-        job = await jobs_collection.find_one({"_id": ObjectId(job_id)})
-        artisan_id = job.get("artisan_id")
         await artisans_collection.update_one(
-            {"_id": ObjectId(artisan_id)},
+            {"_id": ObjectId(job["artisan_id"])},
             {"$inc": {"balance": paid_amount}}
         )
 
         return {"message": "Payment successful"}
     else:
-        await transactions_collection.insert_one(
-            {"success": False, "job_id": job_id}
+        # Handle failed payment
+        transaction = Transaction(
+            job_id=ObjectId(job_id),
+            client_id=ObjectId(job["client_id"]),
+            artisan_id=ObjectId(job["artisan_id"]),
+            service_requested="Unknown",  # we don't have this info for failed transactions
+            paid_amount=0,
+            success=False,
         )
+        await transactions_collection.insert_one(transaction.model_dump(by_alias=True))
 
     return HTTPException(status_code=400, detail="Payment failed")

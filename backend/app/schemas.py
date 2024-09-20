@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from bson import ObjectId
-from models import Coordinates, RoleEnum, ServiceRequest
+from models import Coordinates, RoleEnum, ServiceRequest, Transaction
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 
 
@@ -127,3 +127,17 @@ class Payments(BaseModel):
 class PaystackWebhookPayload(BaseModel):
     event: str
     data: dict
+
+
+
+class TransactionResponse(BaseModel):
+    action: str
+    success: bool
+    artisan_name: str
+    paid_amount: float
+    service_requested: str
+    paid_at: Optional[datetime]
+
+class WalletResponse(BaseModel):
+    balance: float
+    transactions: List[TransactionResponse]
