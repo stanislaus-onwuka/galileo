@@ -71,27 +71,13 @@ async def update_artisan_profile(
 # ============================
 # Service Requests
 # ============================
-@router.get("/requests/all", response_model=AllServiceRequestsResponse)
+@router.get("/requests/all", response_model=list[ServiceRequestResponse])
 async def list_all_service_requests(
     _: UserInDB = Depends(require_roles([RoleEnum.admin]))
 ):
     all_requests = await service_requests_collection.find().to_list(length=None)
 
-    categorized_requests: dict[str, list[ServiceRequestResponse]] = {
-        "pending": [],
-        "accepted": [],
-        "declined": []
-    }
-
-    for request in all_requests:
-        if request["status"] == "accepted":
-            categorized_requests["accepted"].append(ServiceRequestResponse(**request))
-        elif request["status"] == "declined":
-            categorized_requests["declined"].append(ServiceRequestResponse(**request))
-        else:
-            categorized_requests["pending"].append(ServiceRequestResponse(**request))
-
-    return categorized_requests
+    return all_requests
 
 
 @router.get("/requests/pending", response_model=list[ServiceRequestResponse])
