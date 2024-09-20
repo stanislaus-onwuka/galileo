@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import ErrorPage from "./ErrorPage";
 // import Sidebar from "./components/admin/sidebar";
 import AdminDashboard from "./pages/admin";
-// import Signup from "./pages/signup";
-// import Login from "./pages/login";
+import Signup from "./pages/signup.jsx";
+import Login from "./pages/login.jsx";
 import Customer from "./pages/customer";
 import ViewArtisan from "./pages/customer/view-artisan";
 import CustomerProfile from "./pages/customer/profile";
@@ -162,8 +162,8 @@ const AppRoutes = () => {
 
 	return (
 		<Routes>
-			{/* <Route path="/signup" element={<Signup />} /> */}
-			{/* <Route path="/login" element={<Login />} /> */}
+			<Route path="/signup" element={<Signup />} />
+			<Route path="/login" element={<Login />} />
 			<Route path="/administrator/join" element={<JoinAdminTeam />} />
 			{user && (
 				<>
