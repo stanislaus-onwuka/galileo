@@ -1,4 +1,4 @@
-python-dotenv==0.20.0
+python-dotenv
 pandas==1.4.2
 geopy==2.2.0
 fastapi==0.103.1
