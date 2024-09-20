@@ -20,3 +20,4 @@ service_requests_collection = database.get_collection("service_requests")
 
 jobs_collection = database.get_collection("jobs")
 
+transactions_collection = database.get_collection("transactions")

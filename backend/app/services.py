@@ -18,13 +18,13 @@ class PayStackSerivce:
     session = requests.Session()
 
     @classmethod
-    def initialise_payment(cls, email: str, amount: float) -> str | None:
-        print(cls.headers)
+    def initialise_payment(cls, email: str, amount: float, **kwargs) -> str | None:
         url = "https://api.paystack.co/transaction/initialize"
         payload = {
             "email": email,
             "amount": str(amount * 100),  # amount in kobo
             "currency": cls.currency,
+            "metadata": kwargs
         }
 
         try:

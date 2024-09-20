@@ -5,14 +5,14 @@ from typing import List
 from bson import ObjectId
 from dotenv import load_dotenv
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Path, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, BackgroundTasks, Query, Request
 
 from services import PayStackSerivce
-from database import artisans_collection, jobs_collection, service_requests_collection
+from database import artisans_collection, jobs_collection, service_requests_collection, transactions_collection
 from models import Coordinates, Job, JobStatus, RoleEnum, ServiceRequest, UserInDB
 from utils import (calculate_distance, generate_recommendations, get_cached_recommendations, get_current_user, get_user,
-                   require_roles, send_email, sort_artisans_key, update_user_recommendations)
-from schemas import ArtisanProfileResponse, ArtisanRating, ServiceRequestResponse
+                   require_roles, send_email, sort_artisans_key, update_user_recommendations, verify_webhook_origin)
+from schemas import ArtisanProfileResponse, ArtisanRating, PaystackWebhookPayload, ServiceRequestResponse
 
 load_dotenv()  # load environment variables
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
@@ -60,7 +60,7 @@ async def request_service(
 
     content = f"""
     A new service request has been created:
-    
+
     Time: {request_time}
 
     Client: {user.firstName} {user.lastName}
@@ -201,19 +201,67 @@ async def rate_artisan(
     return {"message": "Artisan rated successfully"}
 
 
-@router.post("/initialise-payment/{job_id}")
+@router.get("/initialise-payment/{job_id}")
 async def initialize_payment(
     job_id: str = Path(...),
     user: UserInDB = Depends(get_current_user)
 ):
     job = await jobs_collection.find_one({"_id": ObjectId(job_id), "client_id": user.id})
 
-    if not job or job.get("status") != "completed":
+    if not job or job.get("status") == "paid":
         raise HTTPException(status_code=404, detail="Job not found")
 
+    if job.get("status") != "completed":
+        raise HTTPException(status_code=404, detail="Job not yet completed")
+
     if payment_url := PayStackSerivce.initialise_payment(
-        email=user.email, amount=job.get("price_offer")
+        job_id=job_id,
+        email=user.email,
+        amount=job.get("price_offer"),
     ):
         return {"payment_url": payment_url}
 
     return HTTPException(status_code=400, detail="Invalid request")
+
+
+
+@router.post("/paystack-webhook")
+async def paystack_webhook(request: Request, payload: PaystackWebhookPayload):
+    # if verify_webhook_origin(request):
+    payment_data = payload.data
+    job_id = payment_data.get("metadata", {}).get("job_id")
+    # handle successful service payment
+    if payload.event in ["charge.success", "transfer.success"]:
+        paid_amount = payment_data.get("amount")
+
+        # save transaction to database
+        await transactions_collection.insert_one(
+            {
+                "success": True,
+                "job_id": job_id,
+                "paid_amount": paid_amount,
+                "paid_at": payment_data.get("paidAt"),
+            }
+        )
+
+        # mark job status as paid
+        await jobs_collection.update_one(
+            {"_id": ObjectId(job_id)},
+            {"$set": {"status": "paid"}}
+        )
+
+        # update artisan balance
+        job = await jobs_collection.find_one({"_id": ObjectId(job_id)})
+        artisan_id = job.get("artisan_id")
+        await artisans_collection.update_one(
+            {"_id": ObjectId(artisan_id)},
+            {"$inc": {"balance": paid_amount}}
+        )
+
+        return {"message": "Payment successful"}
+    else:
+        await transactions_collection.insert_one(
+            {"success": False, "job_id": job_id}
+        )
+
+    return HTTPException(status_code=400, detail="Payment failed")
