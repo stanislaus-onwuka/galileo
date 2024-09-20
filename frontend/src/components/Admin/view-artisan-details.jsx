@@ -1,5 +1,32 @@
 /* eslint-disable react/prop-types */
 
+
+
+// [
+//     {
+//       "_id": "string",
+//       "username": "string",
+//       "firstName": "string",
+//       "lastName": "string",
+//       "role": "admin",
+//       "email": "user@example.com",
+//       "address": "string",
+//       "location": {
+//         "latitude": 6.5158,
+//         "longitude": 3.3898
+//       },
+//       "phone_number": "string",
+//       "rating_count": 0,
+//       "avg_rating": 0,
+//       "distance": 0,
+//       "services": [],
+//       "min_service_rate": 0,
+//       "max_service_rate": 0,
+//       "business_name": "string",
+//       "qualification_file": "https://example.com/"
+//     }
+//   ]
+
 function ViewArtisanDetails({ showModal, setShowModal }) {
     return (
         <div className={showModal ? "fixed top-0 left-0 flex" : "fixed top-0 left-0 hidden"}>
@@ -64,7 +91,7 @@ function ViewArtisanDetails({ showModal, setShowModal }) {
                         </div>
                         <div className="flex justify-end space-x-4">
                             <button
-                                onClick={() => setShowModal(false)}
+                                onClick={() => setShowModal(null)}
                                 className="text-black px-4 py-2 rounded-md border border-black"
                             >
                                 Cancel

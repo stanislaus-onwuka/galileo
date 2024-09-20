@@ -29,6 +29,7 @@ import SupplierInventory from "./pages/supplier/inventory";
 import SupplierQuotations from "./pages/supplier/quotations";
 import ArtisanProfile from "./pages/artisan/profile";
 import SupplierProfile from "./pages/supplier/profile";
+import JoinAdminTeam from "./pages/admin/auth/join";
 
 const AppRoutes = () => {
 	const { user } = useAuth();
@@ -39,6 +40,7 @@ const AppRoutes = () => {
 		<Routes>
 			<Route path="/signup" element={<Signup />} />
 			<Route path="/login" element={<Login />} />
+			<Route path="/administrator/join" element={<JoinAdminTeam />} />
 			{user && (
 				<>
 					<Route element={<ProtectedRoute allowedRoles={userRoles} />}>

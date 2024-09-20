@@ -1,8 +1,15 @@
 /* eslint-disable react/prop-types */
 
+import { useLocation } from "react-router-dom"
+import { multipleClasses } from "../../../utils/functions"
+
 function AuthLayout({ children }) {
+    const location = useLocation()
+
+    const isAdminAuth = location.pathname === "/administrator/join"
+
     return (
-        <main className="bg-background p-6 flex h-screen">
+        <main className={ multipleClasses("p-6 flex h-screen", isAdminAuth ? "bg-black" : "bg-background" )}>
             <section className="flex flex-col items-center bg-white rounded-2xl w-full max-w-[600px] py-[100px]">
                 {children}
             </section>

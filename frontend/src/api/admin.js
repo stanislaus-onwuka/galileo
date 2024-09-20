@@ -42,7 +42,17 @@ const updateArtisanProfile = async (data) => {
     }
 }
 
-// getServiceRequests
+
+const getAllServiceRequests = async () => {
+    try {
+        const response = await makeApiRequest.get("/admins/requests/all")
+        return response.data
+
+    } catch (error) {
+        processError(error)
+    }
+}
+
 
 const getPendingServiceRequests = async () => {
     try {
@@ -56,7 +66,7 @@ const getPendingServiceRequests = async () => {
 
 const respondToServiceRequest = async (data) => {
     try {
-        const response = await makeApiRequest.patch(`/admins/requests/${data.id}/respond`, {
+        const response = await makeApiRequest.post(`/admins/requests/${data.id}/respond`, {
             action: data.action,
             reason: data.reason
         })
@@ -73,6 +83,7 @@ const adminApi = {
     getAllCustomers,
     getAllArtisans,
     getAllSuppliers,
+    getAllServiceRequests,
     updateArtisanProfile,
     getPendingServiceRequests,
     respondToServiceRequest

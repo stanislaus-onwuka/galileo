@@ -20,7 +20,8 @@ function ArtisanProfile() {
 		min_service_rate,
 		max_service_rate,
 		services,
-		qualification_file
+		qualification_file,
+		email
 	} = user.user;
 
 	const [userDetails, setUserDetails] = useState({
@@ -33,7 +34,8 @@ function ArtisanProfile() {
 		min_service_rate,
 		max_service_rate,
 		services,
-		qualification_file
+		qualification_file,
+		email
 	});
 
 	useEffect(() => {
@@ -162,7 +164,7 @@ function ArtisanProfile() {
 									<input
 										name="email"
 										type="email"
-										value="kachi2505@yahoo.com"
+										value={userDetails.email}
 										className="py-[14.5px] px-4 rounded-lg border border-[#EAECF0] w-full"
 										disabled
 									/>
