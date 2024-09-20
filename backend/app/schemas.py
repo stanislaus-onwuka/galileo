@@ -1,8 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from bson import ObjectId
-from fastapi import File, UploadFile
 from models import Coordinates, RoleEnum, ServiceRequest
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 
@@ -73,6 +72,12 @@ class ServiceRequestResponse(BaseModelWithID, ServiceRequest):
     date_time: datetime
 
 
+class AllServiceRequestsResponse(BaseModel):
+    pending: List[ServiceRequestResponse]
+    accepted: List[ServiceRequestResponse]
+    declined: List[ServiceRequestResponse]
+
+
 # ================================
 # Admin Actions
 # ================================
@@ -109,3 +114,16 @@ class AdminArtisanProfileUpdate(ArtisanProfileUpdate):
 
 class SupplierProfileUpdate(ArtisanProfileUpdate):
     pass
+
+
+# ================================
+# Payment
+# ================================
+class Payments(BaseModel):
+    email: EmailStr
+    amount: str
+
+
+class PaystackWebhookPayload(BaseModel):
+    event: str
+    data: dict

@@ -10,6 +10,7 @@ from database import (
 from models import Job, RoleEnum, UserInDB
 from schemas import (
     AdminResponse,
+    AllServiceRequestsResponse,
     ArtisanProfileResponse, AdminArtisanProfileUpdate,
     BaseProfileResponse, ServiceRequestResponse
 )
@@ -70,6 +71,29 @@ async def update_artisan_profile(
 # ============================
 # Service Requests
 # ============================
+@router.get("/requests/all", response_model=AllServiceRequestsResponse)
+async def list_all_service_requests(
+    _: UserInDB = Depends(require_roles([RoleEnum.admin]))
+):
+    all_requests = await service_requests_collection.find().to_list(length=None)
+
+    categorized_requests: dict[str, list[ServiceRequestResponse]] = {
+        "pending": [],
+        "accepted": [],
+        "declined": []
+    }
+
+    for request in all_requests:
+        if request["status"] == "accepted":
+            categorized_requests["accepted"].append(ServiceRequestResponse(**request))
+        elif request["status"] == "declined":
+            categorized_requests["declined"].append(ServiceRequestResponse(**request))
+        else:
+            categorized_requests["pending"].append(ServiceRequestResponse(**request))
+
+    return categorized_requests
+
+
 @router.get("/requests/pending", response_model=list[ServiceRequestResponse])
 async def list_pending_service_requests(
     _: UserInDB = Depends(require_roles([RoleEnum.admin]))
@@ -161,8 +185,11 @@ async def admin_respond_to_service_request(
                 f"Your service request for {service_request['service_type']} has been declined. Reason: {response.reason or 'Not provided'}"
             )
 
-        # Delete the service request
-        await service_requests_collection.delete_one({"_id": ObjectId(request_id)})
+        # Update the service request
+        await service_requests_collection.update_one(
+            {"_id": ObjectId(request_id)},
+            {"$set": {"status": "declined"}}
+        )
 
         raise HTTPException(
             status_code=200, detail="Service request declined and deleted")

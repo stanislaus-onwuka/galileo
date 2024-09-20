@@ -1,6 +1,4 @@
-python-dotenv==0.20.0
 pandas==1.4.2
-scikit-learn==1.0.2
 geopy==2.2.0
 fastapi==0.103.1
 uvicorn[standard]==0.23.2
@@ -25,4 +23,7 @@ python-dotenv==1.0.0
 
 # To manage enums more easily (optional)
 enum34==1.1.10
+
+# For file management
+cloudinary==1.41.0
 

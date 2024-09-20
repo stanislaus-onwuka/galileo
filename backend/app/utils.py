@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import math
 import os
 from datetime import datetime, timedelta, timezone
@@ -10,7 +12,7 @@ from jose import JWTError, jwt
 from mailjet_rest import Client
 from pymongo.collection import Collection
 
-from fastapi import Depends, UploadFile, HTTPException, status
+from fastapi import Depends, Request, UploadFile, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from database import (
@@ -25,12 +27,14 @@ load_dotenv()  # load environment variables
 # Constants and OAuth2 setup
 # ============================
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+VALID_TOKEN_MINUTES = 30
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
 EMAIL_API_SECRET = os.getenv("EMAIL_API_SECRET")
+
+PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_API_KEY")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -54,7 +58,7 @@ def decode_token(token: str):
 def create_access_token(data: dict, expires_delta: timedelta = None):
     """Create a JWT access token with optional expiration time"""
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=VALID_TOKEN_MINUTES))
     to_encode["exp"] = expire
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -106,7 +110,9 @@ def get_password_hash(password: str) -> str:
 # ============================
 def get_collection_by_role(role: RoleEnum) -> Collection:
     """Get the appropriate collection based on the user's role"""
-    if role == RoleEnum.customer:
+    if role == RoleEnum.admin:
+        return admins_collection
+    elif role == RoleEnum.customer:
         return customers_collection
     elif role == RoleEnum.artisan:
         return artisans_collection
@@ -274,6 +280,20 @@ def sort_artisans_key(artisan: dict, target_rating: float = None) -> tuple:
     # Sort by proximity to target rating
     rating_diff = abs(rating - target_rating)
     return (distance, rating_diff)
+
+
+def verify_webhook_origin(request: Request):
+    ip_address = request.headers.get("x-forwarded-for")
+
+    if ip_address in ["52.31.139.75", "52.49.173.169", "52.214.14.220"]:
+        body_str = request.json()
+        body_bytes = body_str.encode('utf-8')
+        secret_bytes = PAYSTACK_SECRET_KEY.encode('utf-8')
+
+        signature = hmac.new(secret_bytes, body_bytes, hashlib.sha512).hexdigest()
+
+        if signature == request.headers.get("x-paystack-signature"):
+            return True
 
 
 async def upload_to_cloudinary(file: UploadFile) -> str:

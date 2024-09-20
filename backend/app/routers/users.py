@@ -20,6 +20,9 @@ async def profile(
     firstName: str = Form(...),
     phone_number: str = Form(...),
 
+    longitude: float = Form(None),
+    latitude: float = Form(None),
+
     business_name: Optional[str] = Form(None),
     services: Optional[List[str]] = Form(None),
     qualification_file: UploadFile = File(None),
@@ -48,7 +51,8 @@ async def profile(
         "min_service_rate": min_service_rate,
         "max_service_rate": max_service_rate,
         "services": services or [],
-        "business_name": business_name
+        "business_name": business_name,
+        "location": {"latitude": latitude, "longitude": longitude},
     }
     update_data = {k: v for k, v in update_data.items() if v is not None}
 
