@@ -2,8 +2,8 @@ from bson import ObjectId
 from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
-from database import transactions_collection
-from models import RoleEnum, UserInDB
+from database import jobs_collection, transactions_collection
+from models import Job, RoleEnum, UserInDB
 from schemas import ArtisanProfileResponse, BaseProfileResponse, WalletResponse
 from utils import get_collection_by_role, get_current_user, upload_to_cloudinary
 
@@ -83,6 +83,11 @@ async def update_profile(
     user_data = await collection.find_one({"email": user.email})
 
     return profile_class(**user_data)
+
+
+@router.get("/jobs", response_model=list[Job])
+async def get_artisan_jobs(user: UserInDB = Depends(get_current_user)):
+    return await jobs_collection.find({"client_id": user.id}).to_list(None)
 
 
 @router.get('/wallet', response_model=WalletResponse)
