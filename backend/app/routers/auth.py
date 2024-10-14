@@ -34,7 +34,7 @@ async def signup(user: User):
     # Insert user
     user_collection = get_collection_by_role(user.role)
     user_result = await user_collection.insert_one(
-        {**user.model_dump(exclude={"password", "guarantor_firstName", "guarantor_lastName", "guarantor_phoneNumber"}), 
+        {**user.model_dump(exclude={"password"}), 
         "password": get_password_hash(user.password)}
     )
 
