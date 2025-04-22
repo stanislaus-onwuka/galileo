@@ -112,8 +112,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📞 Contact
 
-Stanley Onwuka - chisomstanleyo@yahoo.com
-Tolulope Joel - toluisjoel!gmail.com
+- Stanley Onwuka - chisomstanleyo@yahoo.com
+- Tolulope Joel - toluisjoel@gmail.com
 
 Project Link: [https://github.com/stanislaus-onwuka/galileo](https://github.com/stanislaus-onwuka/galileo)
 
