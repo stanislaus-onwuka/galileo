@@ -97,7 +97,8 @@ const AdminArtisans = () => {
 								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 									{artisan.phone_number ?? "-"}
 								</td>
-								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{artisan.address}</td>
+								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{artisan.email}</td>
+								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{artisan.address ?? "-"}</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 									{artisan.avg_rating}
 								</td>

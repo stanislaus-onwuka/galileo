@@ -6,7 +6,6 @@ import ArtisanLink from "./artisan-link";
 function ArtisanRecommendedList({ data }) {
     const [artisanColors, setArtisanColors] = useState({});
 
-    console.log(artisanColors)
 	useEffect(() => {
         const colors = {};
         

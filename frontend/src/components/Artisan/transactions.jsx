@@ -1,53 +1,19 @@
-const TransactionsTable = () => {
-	const transactions = [
-		{
-			id: "#001",
-			name: "Cynthia Okeke",
-			service: "Plumbing Repair",
-			date: "2024-07-05, 10:30",
-			location: "Ikoyi",
-			status: "Completed",
-			amount: "₦35,000.00",
-		},
-		{
-			id: "#002",
-			name: "John Doe",
-			date: "2024-07-05, 14:00",
-			location: "Unilag",
-			status: "Delay",
-			amount: "₦35,000.00",
-		},
-		{
-			id: "#003",
-			name: "John Doe",
-			date: "2024-07-05, 14:00",
-			location: "Unilag",
-			status: "Processing",
-			amount: "₦35,000.00",
-		},
-		{
-			id: "#004",
-			name: "John Doe",
-			date: "2024-07-05, 14:00",
-			location: "Unilag",
-			status: "Pending",
-			amount: "₦35,000.00",
-		},
-		{
-			id: "#005",
-			name: "Cynthia Okeke",
-			date: "2024-07-05, 10:30",
-			location: "Ikoyi",
-			status: "Completed",
-			amount: "₦35,000.00",
-		},
-	];
+/* eslint-disable react/prop-types */
+import { parseDate, formatter } from "../../../utils/functions";
 
+const TransactionsTable = ({ data }) => {
+	if (data.transactions.length === 0) {
+		return (
+			<div className="w-full h-full mt-9 flex items-center text-center justify-center py-6">
+				<h3>No transactions currently</h3>
+			</div>
+		);
+	}
 	return (
 		<div className="p-4">
 			<div className="flex w-full justify-between items-center mb-4">
 				<span className="text-gray-600 text-lg">
-					Transactions <strong className="text-neutral-400">{transactions.length}</strong>
+					Transactions <strong className="text-neutral-400">{data.transactions.length}</strong>
 				</span>
 				<div className="relative">
 					<input
@@ -75,13 +41,13 @@ const TransactionsTable = () => {
 							ID
 						</th>
 						<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-							Customer Name
+							Artisan name
 						</th>
 						<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 							Date & Time
 						</th>
 						<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-							Location
+							Service Requested
 						</th>
 						<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 							Status
@@ -92,31 +58,35 @@ const TransactionsTable = () => {
 					</tr>
 				</thead>
 				<tbody>
-					{transactions.map((transaction) => (
+					{data.transactions.map((transaction, idx) => (
 						<tr key={transaction.id}>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.id}</td>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.name}</td>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
+							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{`#${idx + 1}`}</td>
 							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-								{transaction.location}
+								{transaction.artisan_name}
+							</td>
+							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+								{parseDate(transaction.date)}
+							</td>
+							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+								{transaction.service_requested}
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap">
 								<span
 									className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-										transaction.status === "Completed"
+										transaction.success
 											? "text-green-500 bg-green-200"
-											: transaction.status === "Pending"
-											? "text-yellow-500 bg-yellow-200"
-											: transaction.status === "Processing"
-											? "text-yellow-500 bg-yellow-200"
-											: "text-red-500 bg-red-200"
+											: // : transaction.status === "Pending"
+											  // ? "text-yellow-500 bg-yellow-200"
+											  // : transaction.status === "Processing"
+											  // ? "text-yellow-500 bg-yellow-200"
+											  "text-red-500 bg-red-200"
 									}`}
 								>
-									{transaction.status}
+									{transaction.success ? "Success" : "Failed"}
 								</span>
 							</td>
 							<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-								{transaction.amount}
+								{`₦${formatter.format(transaction.paid_amount)}`}
 							</td>
 						</tr>
 					))}

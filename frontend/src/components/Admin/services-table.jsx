@@ -3,6 +3,7 @@ import adminApi from "../../api/admin";
 import Loader from "../misc/loader";
 import { useState } from "react";
 import ServiceRequestsConfirmation from "./service-requests-confirmation";
+import { parseDate, formatter } from "../../../utils/functions";
 
 // const servicesData = [
 // 	{ id: "SRV-0626-031", customer: "Femi", artisan: "Adebola", date: "2024-06-01", status: "Successful" },
@@ -13,6 +14,16 @@ import ServiceRequestsConfirmation from "./service-requests-confirmation";
 // 	{ id: "SRV-0018-921", customer: "Sayo", artisan: "Daniel", date: "2024-06-01", status: "Canceled" },
 // ];
 
+	// {
+	// 	"action": "string",
+	// 	"success": true,
+	// 	"artisan_name": "string",
+	// 	"paid_amount": 0,
+	// 	"service_requested": "string",
+	// 	"paid_at": "2024-09-21T06:08:11.818Z"
+	//   }
+
+
 const ServicesTable = () => {
 	const [selectedService, setSelectedService] = useState(null);
 
@@ -21,12 +32,6 @@ const ServicesTable = () => {
 		queryFn: () => adminApi.getPendingServiceRequests(),
 	});
 
-	function parseISOString(s) {
-		var b = s.split(/\D+/);
-		return new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
-	}
-
-	const formatter = new Intl.NumberFormat("en-US");
 
 	// const statusColor = (status) => {
 	// 	switch (status) {
@@ -102,17 +107,17 @@ const ServicesTable = () => {
 					<tbody className="bg-white divide-y divide-gray-200">
 						{data.map((service, index) => (
 							<tr key={index} onClick={() => setSelectedService(service)}>
-								<td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+								<td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-ellipsis max-w-5 overflow-hidden">
 									{service._id}
 								</td>
-								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-ellipsis max-w-5 overflow-hidden">
 									{service.client_id}
 								</td>
-								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-ellipsis max-w-5 overflow-hidden">
 									{service.artisan_id}
 								</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-									{parseISOString(service.date)}
+									{parseDate(service?.date)}
 								</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 									{service.service_type}

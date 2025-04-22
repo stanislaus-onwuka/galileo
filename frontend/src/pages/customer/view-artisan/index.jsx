@@ -36,8 +36,8 @@ function ViewArtisan() {
 
 	const requestService = useMutation({
 		mutationFn: (data) => artisanApi.requestArtisanService(data),
-        onSuccess: () => {
-            setServiceInProgress(true)
+		onSuccess: () => {
+			setServiceInProgress(true);
 			toast.success("Service requested successfully, we will get back to you soon");
 		},
 		onError: (error) => {
@@ -61,15 +61,12 @@ function ViewArtisan() {
 	});
 
 	const handleFormSubmit = (e) => {
-        e.preventDefault();
-        
-        requestService.mutate(
-            {
-                id: artisanId,
-                ...serviceRequestData
-            }
-        )
+		e.preventDefault();
 
+		requestService.mutate({
+			id: artisanId,
+			...serviceRequestData,
+		});
 	};
 
 	const defaultProps = {
@@ -187,6 +184,7 @@ function ViewArtisan() {
 									name="price_offer"
 									value={serviceRequestData.price_offer}
 									type="number"
+									min="0"
 									placeholder="20000"
 									onChange={handleChange}
 									className="px-4 py-[15.5px] rounded-lg border border-[#EAECF0]"
@@ -205,7 +203,9 @@ function ViewArtisan() {
 							</div>
 
 							{requestService.isPending ? (
-								<Loader containerClass="w-8 h-8 self-center" />
+								<div className="mx-auto my-6">
+									<Loader containerClass="w-8 h-8 self-center" />
+								</div>
 							) : (
 								<button
 									onClick={handleFormSubmit}
@@ -224,7 +224,7 @@ function ViewArtisan() {
 					<aside className="max-w-[400px] rounded-xl shadow-level-3 mx-4 relative z-[1] bg-white">
 						<div className="bg-artisan-sidebar h-[168px] rounded-t-xl px-[15px] py-[25px]">
 							<div className="flex justify-between items-center">
-								<Link to="/customer">
+								<Link to="/">
 									<img src="/assets/svgs/customer/back-btn.svg" alt="Back Button" />
 								</Link>
 								<div className="flex gap-[6px]">

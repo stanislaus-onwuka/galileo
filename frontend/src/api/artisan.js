@@ -78,13 +78,44 @@ const rateArtisan = async (data) => {
     } 
 }
 
+const getPendingServiceRequestsList = async () => {
+    try {
+        const response = await makeApiRequest.get("/artisans/requests/")
+        return response.data
+    } catch (error) {
+        processError(error)
+    }
+}
+
+
+const initializeArtisanPayment = async (job_id) => {
+    try {
+        const response = await makeApiRequest.get(`/artisans/initialise-payment/${job_id}`)
+        return response.data
+    } catch (error) {
+        processError(error)
+    }
+}
+
+const processPayment = async () => {
+    try {
+        const response = await makeApiRequest.post("/artisans/paystack-webhook")
+        return response.data
+    } catch (error) {
+        processError(error)
+    }
+}
+
 const artisanApi = {
     recommendArtisans,
     getArtisanProfile,
     getArtisanJobs,
     requestArtisanService,
     filterArtisans,
-    rateArtisan
+    rateArtisan,
+    getPendingServiceRequestsList,
+    initializeArtisanPayment,
+    processPayment
 }
 
 export default artisanApi

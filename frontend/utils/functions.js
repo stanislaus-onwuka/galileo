@@ -18,3 +18,11 @@ export function getRandomColor() {
 	}
 	return color;
 }
+
+
+export function parseDate(s) {
+	const date = new Date(s)
+	return date.getDate()
+}
+
+export const formatter = new Intl.NumberFormat("en-US");

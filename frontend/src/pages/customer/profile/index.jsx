@@ -39,7 +39,8 @@ function CustomerProfile() {
 		};
 
 		navigator.geolocation.getCurrentPosition(success, error);
-	}, [userDetails]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const handleChange = (e) => {
 		setUserDetails({
@@ -119,6 +120,7 @@ function CustomerProfile() {
 										Phone Number
 									</label>
 									<input
+										id="phone_number"
 										name="phone_number"
 										type="tel"
 										onChange={handleChange}
@@ -131,6 +133,7 @@ function CustomerProfile() {
 										Email
 									</label>
 									<input
+										id="phone_number"
 										name="email"
 										type="email"
 										value={userDetails.email}

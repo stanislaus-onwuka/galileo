@@ -33,7 +33,7 @@ function Customer() {
 
 		if (isError) {
 			return (
-				<div className="w-full h-full flex items-center text-center justify-center py-6">
+				<div className="w-full h-full flex flex-col items-center text-center justify-center py-6">
 					<h3>An error occured</h3>
 					<p className="my-3">{error.message}</p>
 					<button onClick={refetch} className="border border-default mt-3 rounded-full py-2 px-5">

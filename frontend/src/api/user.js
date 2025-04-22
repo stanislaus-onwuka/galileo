@@ -24,9 +24,19 @@ const fetchUserProfile = async () => {
     }
 }
 
+const getWalletInfo = async () => {
+    try {
+        const response = await makeApiRequest.get("/users/wallet")
+        return response
+    } catch (error) {
+        processError(error)
+    }
+}
+
 const userApi = { 
     updateProfile,
-    fetchUserProfile
+    fetchUserProfile,
+    getWalletInfo
 }
 
 export default userApi

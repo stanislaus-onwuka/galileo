@@ -3,7 +3,7 @@ import ViewServiceRequest from "../../components/Admin/view-service-request";
 import { useQuery } from "@tanstack/react-query";
 import adminApi from "../../api/admin";
 import Loader from "../../components/misc/loader";
-
+import { parseDate } from "../../../utils/functions"
 
 const AdminServiceRequests = () => {
 	const [showServiceRequestModal, setShowServiceRequestModal] = useState(false);
@@ -14,10 +14,6 @@ const AdminServiceRequests = () => {
 			queryFn: () => adminApi.getAllServiceRequests(),
         });
         
-        function parseISOString(s) {
-            var b = s.split(/\D+/);
-            return new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
-        }
     
         const formatter = new Intl.NumberFormat("en-US");
 
@@ -94,10 +90,10 @@ const AdminServiceRequests = () => {
 									<td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
 										{request._id}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-ellipsis max-w-5 overflow-hidden">
 										{request.client_id}
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-ellipsis max-w-5 overflow-hidden">
 										{request.artisan_id}
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -110,7 +106,7 @@ const AdminServiceRequests = () => {
 										{request.description ?? "-"}
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-										{parseISOString(request.date)}
+										{parseDate(request.date)}
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap text-sm">
 										<span

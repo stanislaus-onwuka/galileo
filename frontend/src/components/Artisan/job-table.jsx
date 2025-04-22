@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import artisanApi from "../../api/artisan";
 import Loader from "../misc/loader";
+import { parseDate, formatter } from "../../../utils/functions"
 
 // {
 //   "client_id": "string",
@@ -20,12 +21,6 @@ const JobTable = () => {
 		queryFn: () => artisanApi.getArtisanJobs(),
 	});
 
-	function parseISOString(s) {
-		var b = s.split(/\D+/);
-		return new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
-	}
-
-	const formatter = new Intl.NumberFormat("en-US");
 
 	const renderTable = () => {
 		const { isLoading, isError, isSuccess, data, refetch, error } = getArtisanJobs;
@@ -98,7 +93,7 @@ const JobTable = () => {
 									{job.service_type}
 								</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-									{parseISOString(job.date_time)}
+									{parseDate(job.date_time)}
 								</td>
 								<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 									{job.description ? job.description : "-"}

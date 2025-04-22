@@ -56,7 +56,8 @@ function ArtisanProfile() {
 		};
 
 		navigator.geolocation.getCurrentPosition(success, error);
-	}, [userDetails]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 
 
@@ -87,6 +88,7 @@ function ArtisanProfile() {
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
+		console.log(userDetails)
 
 		updateProfile.mutate(userDetails, {
 			onSuccess() {
